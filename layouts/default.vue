@@ -1,0 +1,257 @@
+<template>
+  <div>
+    <v-app>
+      <v-app-bar class="px-8">
+        <v-toolbar-title>
+          <nuxt-link
+            to="/"
+            class="text-decoration-none"
+            :class="[themeIsLight ? 'text-black' : 'text-white']"
+          >
+            <Icon name="⚡" size="24" class="mr-2" />
+            Content generator
+          </nuxt-link>
+        </v-toolbar-title>
+        <v-spacer />
+        <v-row v-if="user" justify="end">
+          <v-col cols="2" md="3">
+            <nuxtLink
+              class="text-decoration-none"
+              :class="[themeIsLight ? 'text-black' : 'text-white']"
+              href="logout"
+              >Logout</nuxtLink
+            >
+          </v-col>
+        </v-row>
+        <v-row v-else justify="end">
+          <v-col cols="2" md="3">
+            <nuxtLink
+              to="sign-in"
+              class="text-decoration-none"
+              :class="[themeIsLight ? 'text-black' : 'text-white']"
+              >Sign In</nuxtLink
+            >
+          </v-col>
+          <v-col cols="2" md="3">
+            <nuxtLink
+              to="sign-up"
+              class="text-decoration-none"
+              :class="[themeIsLight ? 'text-black' : 'text-white']"
+              >Sign Up</nuxtLink
+            >
+          </v-col>
+        </v-row>
+        <v-btn icon @click="toggleTheme" v-if="themeIsLight">
+          <Icon name="mdi:moon-waxing-crescent" size="24" />
+        </v-btn>
+        <v-btn icon @click="toggleTheme" v-else>
+          <Icon name="mdi:white-balance-sunny" size="24" />
+        </v-btn>
+      </v-app-bar>
+      <v-navigation-drawer v-if="user">
+        <v-list>
+          <div>
+            <v-list-item
+              :to="`/contents/${content?.name}`"
+              v-for="content of contents"
+              class="px-0"
+            >
+              <span class="px-2">{{ content?.name }}</span>
+              <Icon name="mdi:pen" size="24" @click.prevent="show_modal = true; new_content.id = content.id; new_content.name = content.name" />
+              <Icon name="mdi:delete" size="24" @click.prevent="deleteContent(content.id)"/>
+            </v-list-item>
+            <v-divider />
+          </div>
+          <v-spacer />
+          <v-list-item @click="show_modal = true" class="px-0">
+            <span class="px-2">
+              <Icon name="mdi:plus" />
+              <span class="ml-2">Add new content</span>
+            </span>
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
+      <v-main class="d-flex align-center">
+        <v-container>
+          <slot />
+        </v-container>
+      </v-main>
+
+      <v-footer app elevation="5">
+        <v-row
+          no-gutters
+          justify="center"
+          class="text-overline font-weight-black"
+        >
+          <p class="my-auto">MVM</p>
+          <v-spacer />
+          <p class="my-auto">Powered by OpenAi</p>
+          <Icon name="logos:openai-icon" />
+        </v-row>
+      </v-footer>
+      <v-overlay :model-value="loading" class="align-center justify-center">
+        <v-progress-circular
+          color="secondary"
+          indeterminate
+          size="64"
+        ></v-progress-circular>
+      </v-overlay>
+      <v-snackbar
+        v-for="[key, value] in messages"
+        :key="key"
+        :model-value="value"
+        :color="value.type || 'info'"
+        timeout="1000"
+        location="top right"
+      >
+        {{ value.message }}
+      </v-snackbar>
+    </v-app>
+    <v-dialog v-model="show_modal" width="600">
+      <v-card>
+        <v-form @submit.prevent="createEditContent">
+          <v-card-title class="text-center">{{ new_content.id ? "Edit a content" : "Create a new content" }}</v-card-title>
+          <v-card-text class="mt-4">
+            <v-row dense="dense" justify="center">
+              <v-col cols="10">
+                <v-text-field
+                  class="form-control"
+                  name="name"
+                  label="Content name"
+                  density="compact"
+                  type="text"
+                  v-model="new_content.name"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-card-text>
+          <v-card-actions class="mb-2">
+            <v-row dense="dense" justify="center">
+              <v-col class="d-flex justify-center" cols="12" lg="8">
+                <v-btn class="bg-secondary" type="submit">{{ new_content.id ? "Edit a content" : "Add a content" }}</v-btn>
+              </v-col>
+            </v-row>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+
+<script setup>
+import { useTheme } from "vuetify";
+import loading from "~/stores/loading";
+import { messages, successMessage, errorMessage } from "~/stores/message";
+
+const user = useSupabaseUser();
+let new_content = reactive({
+  id: null,
+  name: "",
+});
+const show_modal = ref(false);
+const contents = ref([]);
+if (user.value) {
+  const { data } = await useFetch("/api/contents", {
+    key: `contents for ${user.value.id}`,
+    headers: useRequestHeaders(["cookie"]),
+  });
+
+  contents.value = data.value;
+}
+
+const route = useRoute();
+useHead({
+  titleTemplate: (title) =>
+    title ? `MVM Content Generator - ${title}` : "MVM Content Generator",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  charset: "utf-8",
+  meta: [
+    {
+      name: "description",
+      content: route.meta.description,
+    },
+    { name: "og:title", content: route.meta.title },
+    { name: "og:type", content: "website" },
+    { name: "og:url", content: "website" },
+    {
+      name: "og:description",
+      content: route.meta.description,
+    },
+    { name: "og:image", content: "website" },
+    { name: "og:image:alt", content: "MVM content generator" },
+    { name: "og:image:width", content: "1280" },
+    { name: "og:image:width", content: "675" },
+  ],
+});
+
+const theme = useTheme();
+const themeIsLight = computed(() => theme.global.name.value === "light");
+function toggleTheme() {
+  theme.global.name.value = themeIsLight.value ? "dark" : "light";
+}
+
+const router = useRouter();
+const createEditContent = async () => {
+  try {
+    loading.value = true;
+    if (new_content.id) {
+      const { data } = await useFetch(`/api/contents/${new_content.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ ...new_content }),
+        headers: useRequestHeaders(["cookie"]),
+      });
+      contents.value.find((c) => c.id === data.value.id).name = data.value.name;
+      successMessage("Content edited successfully");
+    } else {
+      const { data } = await useFetch(`/api/contents`, {
+        method: "POST",
+        body: JSON.stringify({ name: new_content.name }),
+        headers: useRequestHeaders(["cookie"]),
+      });
+      contents.value.push(data.value);
+      router.push(`/contents/${data.value.name}`);
+      successMessage("Content created successfully");
+    }
+  
+    show_modal.value = false;
+    new_content.id = null;
+    new_content.name = "";
+  } catch (error) {
+    console.error("error", error);
+    errorMessage(error.message);
+    return;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const deleteContent = async (id) => {
+  const result = confirm("Are you sure you want to delete this content?");
+  if (!result) return loading.value = true;
+  try {
+    await useFetch(`/api/contents/${id}`, {
+      method: "DELETE",
+      headers: useRequestHeaders(["cookie"]),
+    });
+    const index = contents.value.findIndex((c) => c.id === id);
+    contents.value.splice(index, 1);
+    successMessage("Content deleted successfully");
+  } catch (error) {
+    console.error("error", error);
+    errorMessage(error.message);
+    return;
+  } finally {
+    loading.value = false;
+  }
+}
+
+</script>
+<style>
+.position-absolute {
+  position: absolute;
+}
+
+.bottom-0 {
+  bottom: 0;
+}
+</style>

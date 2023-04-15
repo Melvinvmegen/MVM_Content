@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "@nuxtjs/supabase": "^0.3.1",
+    "nuxt": "^3.2.3",
+    "nuxt-icon": "^0.3.2",
+    "nuxt-purgecss": "^2.0.0",
+    "prisma": "^4.11.0",
+    "vite-plugin-vuetify": "^1.0.2",
+    "vue-gtag-next": "^1.14.0",
+    "vuetify": "^3.1.7"
+  },
+  "dependencies": {
+    "@prisma/client": "4.11.0",
+    "@tinymce/tinymce-vue": "^5",
+    "openai": "^3.2.0",
+    "vue-recaptcha": "^2.0.3"
+  }
+}
