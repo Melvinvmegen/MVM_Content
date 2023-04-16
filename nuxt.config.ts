@@ -27,7 +27,7 @@ export default defineNuxtConfig({
     content: [
       'modules/purgecss/static-generated-html/**/*.html',
     ],
-    // enabled: true,
+    enabled: true,
     keyframes: true,
     safelist: {
       standard: [
@@ -45,6 +45,11 @@ export default defineNuxtConfig({
         /v-icon*/,
         /mdi*/,
         /v-field*/,
+        /v-input*/,
+        /v-label*/,
+        /v-overlay*/,
+        /v-card*/,
+        /v-snackbar*/,
       ],
     },
   },
