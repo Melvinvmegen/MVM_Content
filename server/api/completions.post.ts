@@ -1,9 +1,8 @@
 import { Configuration, OpenAIApi } from "openai";
 import { sendStream } from "h3";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/utils/prisma";
 import { serverSupabaseUser } from "#supabase/server";
 
-const prisma = new PrismaClient();
 const runtimeConfig = useRuntimeConfig();
 const configuration = new Configuration({
   apiKey: runtimeConfig.openaiApiKey,

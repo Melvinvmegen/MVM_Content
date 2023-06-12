@@ -45,13 +45,8 @@ import { successMessage, errorMessage } from "~/stores/message";
 import loading from "~~/stores/loading";
 
 const client = useSupabaseClient();
-const user = useSupabaseUser();
 const email = ref("");
 const router = useRouter();
-
-onMounted(() => {
-  if (user.value) router.push("/");
-});
 
 const resetPassword = async () => {
   loading.value = true;

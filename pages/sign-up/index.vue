@@ -10,20 +10,37 @@
           <v-row justify="center">
             <v-col cols="8">
               <v-text-field
+                :rules="[(v) => !!v || 'Firstname is required']"
+                v-model="newUser.firstName"
+                label="First name"
+                required
+                variant="outlined"
+                name="firstName"
+              ></v-text-field>
+              <v-text-field
+                :rules="[(v) => !!v || 'Lastname is required']"
+                v-model="newUser.lastName"
+                label="Last name"
+                required
+                variant="outlined"
+                name="lastName"
+              ></v-text-field>
+              <v-text-field
                 :rules="[(v) => !!v || 'Email is required']"
-                v-model="email"
+                v-model="newUser.email"
                 label="Email"
                 required
                 variant="outlined"
                 name="email"
               ></v-text-field>
-              <password-field v-model:password="password"></password-field>
+              <password-field v-model:password="newUser.password"></password-field>
               <v-btn
                 type="submit"
                 color="secondary"
                 class="mt-2"
                 size="large"
                 variant="outlined"
+                :disabled="!valid"
                 >Submit</v-btn
               >
             </v-col>
@@ -43,36 +60,31 @@
 import { successMessage, errorMessage } from "~/stores/message";
 import loading from "~/stores/loading";
 
-const client = useSupabaseClient();
-const user = useSupabaseUser();
-const email = ref("");
-const password = ref("");
+const newUser = reactive({});
 const router = useRouter();
-
-onMounted(() => {
-  if (user.value) router.push("/");
-});
+const valid = ref(true);
 
 const signUp = async () => {
   loading.value = true;
-  const { data, error } = await client.auth.signUp({
-    email: email.value,
-    password: password.value,
-  });
-
-  loading.value = false;
-
-  if (error) {
+  try {
+    const { data: user } = await useFetch("/api/users", {
+      method: "POST",
+      body: JSON.stringify({
+        ...newUser,
+      }),
+    });
+    if (user.value?.identities?.length) {
+      successMessage("Check your email for the confirmation link");
+      router.push("/sign-up-confirmation");
+    } else {
+      successMessage("You already have an account, sign in!");
+      router.push("/sign-in");
+    }
+  } catch (error) {
     console.error("error", error);
     errorMessage(error.message);
-    return;
-  }
-
-  successMessage("Check your email for the confirmation link");
-  if (data?.user?.identities?.length) {
-    router.push("/sign-up-confirmation");
-  } else if (!error) {
-    router.push("/sign-in");
+  } finally {
+    loading.value = false;
   }
 };
 </script>

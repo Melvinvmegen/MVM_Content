@@ -2,51 +2,90 @@
   <div>
     <v-app>
       <v-app-bar class="px-8">
-        <v-toolbar-title>
-          <nuxt-link
-            to="/"
-            class="text-decoration-none"
-            :class="[themeIsLight ? 'text-black' : 'text-white']"
-          >
-            <Icon name="⚡" size="24" class="mr-2" />
-            Content generator
-          </nuxt-link>
-        </v-toolbar-title>
-        <v-spacer />
-        <v-row v-if="user" justify="end">
-          <v-col cols="2" md="3">
-            <nuxtLink
-              class="text-decoration-none"
-              :class="[themeIsLight ? 'text-black' : 'text-white']"
-              href="logout"
-              >Logout</nuxtLink
-            >
+        <v-row>
+          <v-col cols="3">
+            <v-toolbar-title>
+              <nuxt-link
+                to="/"
+                class="text-decoration-none"
+                :class="[themeIsLight ? 'text-black' : 'text-white']"
+              >
+                <Icon name="⚡" size="24" class="mr-2" />
+                Content generator
+              </nuxt-link>
+            </v-toolbar-title>
+          </v-col>
+          <v-spacer />
+          <v-col cols="2">
+            <v-row justify="end" align="center" class="flex-0-0">
+              <div v-if="user">
+                <v-col cols="2" md="3">
+                  <v-menu transition="slide-y-transition">
+                    <template v-slot:activator="{ props }">
+                      <v-btn v-bind="props">
+                        <Icon name="mdi-account" size="24" />
+                      </v-btn>
+                    </template>
+                    <v-list>
+                      <nuxtLink
+                        class="text-decoration-none"
+                        :class="[themeIsLight ? 'text-black' : 'text-white']"
+                        to="/update-password"
+                      >
+                        <v-list-item>
+                          <v-list-item-title>Profile</v-list-item-title>
+                        </v-list-item>
+                      </nuxtLink>
+                      <nuxtLink
+                        class="text-decoration-none"
+                        :class="[themeIsLight ? 'text-black' : 'text-white']"
+                        to="/user/billing"
+                      >
+                        <v-list-item>
+                          <v-list-item-title>Billing</v-list-item-title>
+                        </v-list-item>
+                      </nuxtLink>
+                      <nuxtLink
+                        class="text-decoration-none"
+                        :class="[themeIsLight ? 'text-black' : 'text-white']"
+                        to="/user/logout"
+                      >
+                        <v-list-item>
+                          <v-list-item-title>Logout</v-list-item-title>
+                        </v-list-item>
+                      </nuxtLink>
+                    </v-list>
+                  </v-menu>
+                </v-col>
+              </div>
+              <v-row v-else>
+                <v-col>
+                  <nuxtLink
+                    to="sign-in"
+                    class="text-decoration-none"
+                    :class="[themeIsLight ? 'text-black' : 'text-white']"
+                    >Sign In</nuxtLink
+                  >
+                </v-col>
+                <v-col>
+                  <nuxtLink
+                    to="sign-up"
+                    class="text-decoration-none"
+                    :class="[themeIsLight ? 'text-black' : 'text-white']"
+                    >Sign Up</nuxtLink
+                  >
+                </v-col>
+              </v-row>
+
+              <v-btn icon @click="toggleTheme" v-if="themeIsLight">
+                <Icon name="mdi:moon-waxing-crescent" size="24" />
+              </v-btn>
+              <v-btn icon @click="toggleTheme" v-else>
+                <Icon name="mdi:white-balance-sunny" size="24" />
+              </v-btn>
+            </v-row>
           </v-col>
         </v-row>
-        <v-row v-else justify="end">
-          <v-col cols="2" md="3">
-            <nuxtLink
-              to="sign-in"
-              class="text-decoration-none"
-              :class="[themeIsLight ? 'text-black' : 'text-white']"
-              >Sign In</nuxtLink
-            >
-          </v-col>
-          <v-col cols="2" md="3">
-            <nuxtLink
-              to="sign-up"
-              class="text-decoration-none"
-              :class="[themeIsLight ? 'text-black' : 'text-white']"
-              >Sign Up</nuxtLink
-            >
-          </v-col>
-        </v-row>
-        <v-btn icon @click="toggleTheme" v-if="themeIsLight">
-          <Icon name="mdi:moon-waxing-crescent" size="24" />
-        </v-btn>
-        <v-btn icon @click="toggleTheme" v-else>
-          <Icon name="mdi:white-balance-sunny" size="24" />
-        </v-btn>
       </v-app-bar>
       <v-navigation-drawer v-if="user">
         <v-list>
@@ -57,8 +96,20 @@
               class="px-0"
             >
               <span class="px-2">{{ content?.name }}</span>
-              <Icon name="mdi:pen" size="24" @click.prevent="show_modal = true; new_content.id = content.id; new_content.name = content.name" />
-              <Icon name="mdi:delete" size="24" @click.prevent="deleteContent(content.id)"/>
+              <Icon
+                name="mdi:pen"
+                size="24"
+                @click.prevent="
+                  show_modal = true;
+                  new_content.id = content.id;
+                  new_content.name = content.name;
+                "
+              />
+              <Icon
+                name="mdi:delete"
+                size="24"
+                @click.prevent="deleteContent(content.id)"
+              />
             </v-list-item>
             <v-divider />
           </div>
@@ -102,7 +153,7 @@
         :model-value="value"
         :color="value.type || 'info'"
         timeout="1000"
-        location="top right"
+        location="top"
       >
         {{ value.message }}
       </v-snackbar>
@@ -110,7 +161,9 @@
     <v-dialog v-model="show_modal" width="600">
       <v-card>
         <v-form @submit.prevent="createEditContent">
-          <v-card-title class="text-center">{{ new_content.id ? "Edit a content" : "Create a new content" }}</v-card-title>
+          <v-card-title class="text-center">{{
+            new_content.id ? "Edit a content" : "Create a new content"
+          }}</v-card-title>
           <v-card-text class="mt-4">
             <v-row dense="dense" justify="center">
               <v-col cols="10">
@@ -128,7 +181,9 @@
           <v-card-actions class="mb-2">
             <v-row dense="dense" justify="center">
               <v-col class="d-flex justify-center" cols="12" lg="8">
-                <v-btn class="bg-secondary" type="submit">{{ new_content.id ? "Edit a content" : "Add a content" }}</v-btn>
+                <v-btn class="bg-secondary" type="submit">{{
+                  new_content.id ? "Edit a content" : "Add a content"
+                }}</v-btn>
               </v-col>
             </v-row>
           </v-card-actions>
@@ -212,7 +267,7 @@ const createEditContent = async () => {
       router.push(`/contents/${data.value.name}`);
       successMessage("Content created successfully");
     }
-  
+
     show_modal.value = false;
     new_content.id = null;
     new_content.name = "";
@@ -227,7 +282,7 @@ const createEditContent = async () => {
 
 const deleteContent = async (id) => {
   const result = confirm("Are you sure you want to delete this content?");
-  if (!result) return loading.value = true;
+  if (!result) return (loading.value = true);
   try {
     await useFetch(`/api/contents/${id}`, {
       method: "DELETE",
@@ -243,8 +298,7 @@ const deleteContent = async (id) => {
   } finally {
     loading.value = false;
   }
-}
-
+};
 </script>
 <style>
 .position-absolute {

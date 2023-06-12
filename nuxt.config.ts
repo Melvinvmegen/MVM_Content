@@ -4,9 +4,14 @@ import vuetify from "vite-plugin-vuetify";
 export default defineNuxtConfig({
   runtimeConfig: {
     openaiApiKey: "",
-    recaptchaSecretKey: "",   
+    recaptchaSecretKey: "",
+    basicAuthFinanceUrl: "http://localhost:8080/api/payment",
+    basicAuthFinanceUser: "",
+    basicAuthFinancePassword: "",
+    webhookUser: "",
+    webhookPassword: "",
     public: {
-      recaptchaSiteKey: ""
+      recaptchaSiteKey: "",
     },
   },
   build: {
@@ -22,12 +27,16 @@ export default defineNuxtConfig({
     "nuxt-purgecss",
     "nuxt-icon",
     "@nuxtjs/supabase",
+    "@pinia/nuxt",
   ],
-  purgecss: {
-    content: [
-      'modules/purgecss/static-generated-html/**/*.html',
+  pinia: {
+    autoImports: [
+      'defineStore',
     ],
-    enabled: true,
+  },
+  purgecss: {
+    content: ["modules/purgecss/static-generated-html/**/*.html"],
+    enabled: false,
     keyframes: true,
     safelist: {
       standard: [
@@ -54,7 +63,7 @@ export default defineNuxtConfig({
     },
   },
   nuxtIcon: {
-    size: '24px',
-    class: 'icon',
-  }
+    size: "24px",
+    class: "icon",
+  },
 });

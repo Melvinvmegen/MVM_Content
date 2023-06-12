@@ -1,7 +1,7 @@
 <template>
   <v-row justify="center">
     <v-col cols="12" md="10">
-      <v-sheet elevation="5" class="pa-8 text-center">
+      <!-- <v-sheet elevation="5" class="pa-8 text-center">
         <Icon name="⚡" size="30" />
         <h1 class="text-h5">Content generator</h1>
         <p>Generate content for SEO not bullshit just facts</p>
@@ -161,7 +161,7 @@
           >
           
         </template>
-      </v-sheet>
+      </v-sheet> -->
     </v-col>
   </v-row>
 </template>

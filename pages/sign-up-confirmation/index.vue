@@ -28,14 +28,8 @@
 <script setup>
 import { successMessage, errorMessage } from "~/stores/message";
 
-const router = useRouter();
-const user = useSupabaseUser();
 const disableResentButton = ref(true);
 const currentTimeOut = ref(null);
-
-watch(user, () => {
-  if (user.value) router.push("/");
-});
 
 const enableButtonAfter1Minute = () => {
   currentTimeOut.value = setTimeout(() => {

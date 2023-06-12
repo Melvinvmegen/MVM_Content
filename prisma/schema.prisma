@@ -10,7 +10,7 @@ datasource db {
 }
 
 model Completions {
-  id         BigInt    @id @default(autoincrement())
+  id         Int       @id @default(autoincrement()) @db.SmallInt
   created_at DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
   updated_at DateTime? @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
   content_id BigInt
@@ -114,7 +114,6 @@ model refresh_tokens {
   @@index([instance_id, user_id])
   @@index([parent])
   @@index([session_id, revoked])
-  @@index([token])
   @@schema("auth")
 }
 
@@ -197,44 +196,45 @@ model sso_providers {
 }
 
 model users {
-  instance_id                 String?       @db.Uuid
-  id                          String        @id @db.Uuid
-  aud                         String?       @db.VarChar(255)
-  role                        String?       @db.VarChar(255)
-  email                       String?       @db.VarChar(255)
-  encrypted_password          String?       @db.VarChar(255)
-  email_confirmed_at          DateTime?     @db.Timestamptz(6)
-  invited_at                  DateTime?     @db.Timestamptz(6)
-  confirmation_token          String?       @db.VarChar(255)
-  confirmation_sent_at        DateTime?     @db.Timestamptz(6)
-  recovery_token              String?       @db.VarChar(255)
-  recovery_sent_at            DateTime?     @db.Timestamptz(6)
-  email_change_token_new      String?       @db.VarChar(255)
-  email_change                String?       @db.VarChar(255)
-  email_change_sent_at        DateTime?     @db.Timestamptz(6)
-  last_sign_in_at             DateTime?     @db.Timestamptz(6)
+  instance_id                 String?        @db.Uuid
+  id                          String         @id @db.Uuid
+  aud                         String?        @db.VarChar(255)
+  role                        String?        @db.VarChar(255)
+  email                       String?        @db.VarChar(255)
+  encrypted_password          String?        @db.VarChar(255)
+  email_confirmed_at          DateTime?      @db.Timestamptz(6)
+  invited_at                  DateTime?      @db.Timestamptz(6)
+  confirmation_token          String?        @db.VarChar(255)
+  confirmation_sent_at        DateTime?      @db.Timestamptz(6)
+  recovery_token              String?        @db.VarChar(255)
+  recovery_sent_at            DateTime?      @db.Timestamptz(6)
+  email_change_token_new      String?        @db.VarChar(255)
+  email_change                String?        @db.VarChar(255)
+  email_change_sent_at        DateTime?      @db.Timestamptz(6)
+  last_sign_in_at             DateTime?      @db.Timestamptz(6)
   raw_app_meta_data           Json?
   raw_user_meta_data          Json?
   is_super_admin              Boolean?
-  created_at                  DateTime?     @db.Timestamptz(6)
-  updated_at                  DateTime?     @db.Timestamptz(6)
-  phone                       String?       @unique
-  phone_confirmed_at          DateTime?     @db.Timestamptz(6)
-  phone_change                String?       @default("")
-  phone_change_token          String?       @default("") @db.VarChar(255)
-  phone_change_sent_at        DateTime?     @db.Timestamptz(6)
-  confirmed_at                DateTime?     @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
-  email_change_token_current  String?       @default("") @db.VarChar(255)
-  email_change_confirm_status Int?          @default(0) @db.SmallInt
-  banned_until                DateTime?     @db.Timestamptz(6)
-  reauthentication_token      String?       @default("") @db.VarChar(255)
-  reauthentication_sent_at    DateTime?     @db.Timestamptz(6)
-  is_sso_user                 Boolean       @default(false)
-  deleted_at                  DateTime?     @db.Timestamptz(6)
+  created_at                  DateTime?      @db.Timestamptz(6)
+  updated_at                  DateTime?      @db.Timestamptz(6)
+  phone                       String?        @unique
+  phone_confirmed_at          DateTime?      @db.Timestamptz(6)
+  phone_change                String?        @default("")
+  phone_change_token          String?        @default("") @db.VarChar(255)
+  phone_change_sent_at        DateTime?      @db.Timestamptz(6)
+  confirmed_at                DateTime?      @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
+  email_change_token_current  String?        @default("") @db.VarChar(255)
+  email_change_confirm_status Int?           @default(0) @db.SmallInt
+  banned_until                DateTime?      @db.Timestamptz(6)
+  reauthentication_token      String?        @default("") @db.VarChar(255)
+  reauthentication_sent_at    DateTime?      @db.Timestamptz(6)
+  is_sso_user                 Boolean        @default(false)
+  deleted_at                  DateTime?      @db.Timestamptz(6)
   identities                  identities[]
   mfa_factors                 mfa_factors[]
   sessions                    sessions[]
   Contents                    Contents[]
+  UserProfiles                UserProfiles[]
 
   @@index([instance_id])
   @@schema("auth")
@@ -248,6 +248,45 @@ model Contents {
   user_id     String        @db.Uuid
   Completions Completions[]
   users       users         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model flow_state {
+  id                     String                @id @db.Uuid
+  user_id                String?               @db.Uuid
+  auth_code              String
+  code_challenge_method  code_challenge_method
+  code_challenge         String
+  provider_type          String
+  provider_access_token  String?
+  provider_refresh_token String?
+  created_at             DateTime?             @db.Timestamptz(6)
+  updated_at             DateTime?             @db.Timestamptz(6)
+  authentication_method  String
+
+  @@index([auth_code], map: "idx_auth_code")
+  @@index([user_id, authentication_method], map: "idx_user_id_auth_method")
+  @@schema("auth")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model UserProfiles {
+  id             BigInt    @id(map: "UserProfile_pkey") @default(autoincrement())
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+  firstName      String?   @db.VarChar
+  lastName       String?   @db.VarChar
+  UserId         String?   @db.Uuid
+  FinanceId      Int?      @unique
+  billingAddress String?
+  billingZipCode String?
+  billingCity    String?
+  billingCountry String?
+  tokens         Int?
+  SubscriptionId Int?      @unique
+  users          users?    @relation(fields: [UserId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("public")
 }
@@ -270,6 +309,13 @@ enum factor_status {
 enum factor_type {
   totp
   webauthn
+
+  @@schema("auth")
+}
+
+enum code_challenge_method {
+  s256
+  plain
 
   @@schema("auth")
 }
