@@ -2,8 +2,8 @@ export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig();
   const { type } = getQuery(event);
   const priceIds = {
-    payment: "prod_O2XBzUMOdsAV63",
-    subscription: "prod_O2X9eprJG4IqJO",
+    payment: "prod_O6EFKBJoJJJrbd",
+    subscription: "prod_O6EE4hgqAjqkFe",
   };
 
   try {

@@ -4,10 +4,9 @@ import { errorMessage } from "~/stores/message";
 import { loadStripe } from "@stripe/stripe-js";
 import { useUserStore } from "~/stores/user";
 
+const runtimeConfig = useRuntimeConfig();
 const store = useUserStore();
-const stripe = await loadStripe(
-  "pk_test_51IJbEYGesxfbePZU0lq6YsIOCeopuUD4Rtr6UgRlpDDPU0x2FVIV1wEczOXUOEmYAitdfmbh8tvVRXZpDAZ5oHJ400ZKK06wq9"
-);
+const stripe = await loadStripe(runtimeConfig.public.stripePublicKey);
 let elements;
 let form;
 let submitBtn;
@@ -74,19 +73,22 @@ async function handleFormSubmission(event) {
     return;
   }
 
-  const { data: paymentIntent } = await useFetch(`/api/${props.type === 'payment' ? 'payment-intents' : 'subscriptions'}`, {
-    method: "POST",
-    body: JSON.stringify({
-      amount: props.amount,
-      customerId: store.userProfile.FinanceId,
-      paymentMethodId: paymentMethod.id,
-      billingAddress: store.userProfile.billingAddress,
-      billingCity: store.userProfile.billingCity,
-      billingZipCode: store.userProfile.billingZipCode,
-      billingCountry: store.userProfile.billingCountry,
-      priceId: props.priceId,
-    }),
-  });
+  const { data: paymentIntent } = await useFetch(
+    `/api/${props.type === "payment" ? "payment-intents" : "subscriptions"}`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        amount: props.amount,
+        customerId: store.userProfile.FinanceId,
+        paymentMethodId: paymentMethod.id,
+        billingAddress: store.userProfile.billingAddress,
+        billingCity: store.userProfile.billingCity,
+        billingZipCode: store.userProfile.billingZipCode,
+        billingCountry: store.userProfile.billingCountry,
+        priceId: props.priceId,
+      }),
+    }
+  );
 
   handleServerResponse(paymentIntent.value);
 }
@@ -115,22 +117,27 @@ const handleServerResponse = async (clientSecret) => {
 };
 </script>
 <template>
-  <v-sheet elevation="5" class="pa-8 text-center">
+  <v-sheet elevation="5" class="pa-4 pa-sm-8 text-center">
     <Icon name="⚡" size="30" />
     <template v-if="props.type === 'payment'">
-      <h1 class="text-h5" >Buy some tokens</h1>
+      <h1 class="text-h5">Buy some tokens</h1>
       <p>Get access to the best AI generated content!</p>
     </template>
     <template v-else>
-      <h1 class="text-h5" >Subscribe</h1>
+      <h1 class="text-h5">Subscribe</h1>
       <p>Get unlimited access to AI generated content!</p>
     </template>
     <br />
     <v-row justify="center">
-      <v-col cols="8">
+      <v-col cols="11" md="8">
         <form id="payment-form">
           <div id="payment-element"></div>
-          <button id="submit">Submit</button>
+          <button
+            class="v-btn v-btn--elevated v-theme--dark v-btn--density-default v-btn--size-default v-btn--variant-elevated bg-secondary mt-4"
+            id="submit"
+          >
+            Submit
+          </button>
           <div id="error-message"></div>
         </form>
       </v-col>

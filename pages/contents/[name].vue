@@ -1,7 +1,7 @@
 <template>
   <v-row justify="center">
     <v-col cols="12" md="10">
-      <v-sheet elevation="5" class="pa-8 text-center">
+      <v-sheet elevation="5" class="pa-4 pa-sm-8 text-center">
         <Icon name="⚡" size="30" />
         <h1 class="text-h5">Content generator</h1>
         <p>Generate content for SEO not bullshit just facts</p>
@@ -51,7 +51,7 @@
           />
         </v-form>
       </v-sheet>
-      <v-sheet elevation="5" class="pa-8 text-center position-relative">
+      <v-sheet elevation="5" class="pa-4 pa-sm-8 text-center position-relative">
         <v-row class="w-100" id="control-bar" justify="center">
           <template v-if="completion">
             <v-btn
@@ -193,14 +193,13 @@
       </v-sheet>
     </v-col>
     <v-btn
-      color="primary"
+      color="transparent"
       v-scroll="onScroll"
-      density="comfortable"
       id="scroll-to-top-button"
+      rounded="xl"
       @click="scrollTo"
       ><Icon
         name="mdi-arrow-up-bold-circle-outline"
-        color="secondary"
         size="36"
     /></v-btn>
   </v-row>

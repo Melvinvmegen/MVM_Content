@@ -1,14 +1,14 @@
 <template>
   <v-row justify="center">
-    <v-col cols="12" md="8" lg="6">
-      <v-sheet elevation="5" class="pa-8 text-center">
+    <v-col cols="12" sm="10" md="8" lg="6">
+      <v-sheet elevation="5" class="pa-4 pa-sm-8 text-center">
         <Icon name="⚡" size="30" />
         <h1 class="text-h5">Welcome back</h1>
         <p>Sign in to your account</p>
         <br />
         <v-form @submit.prevent="login" v-model="valid">
           <v-row justify="center">
-            <v-col cols="8">
+            <v-col cols="11" md="8">
               <v-text-field
                 :rules="[(v) => !!v || 'Field is required']"
                 v-model="email"

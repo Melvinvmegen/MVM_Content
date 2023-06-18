@@ -1,7 +1,7 @@
 <template>
   <v-row justify="center">
     <v-col cols="12" md="8" lg="6">
-      <v-sheet elevation="5" class="pa-8 text-center">
+      <v-sheet elevation="5" class="pa-4 pa-sm-8 text-center">
         <Icon name="⚡" size="30" />
         <h2 class="text-h5">Check you emails !</h2>
         <br />

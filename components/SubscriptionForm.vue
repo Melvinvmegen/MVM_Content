@@ -39,14 +39,14 @@ function nextStep() {
             >
               <v-card-item>
                 <div>
-                  <div class="text-overline mb-1">
+                  <div class="text-overline mb-1 text-center text-sm-left">
                     {{ "Unlimited access" }}
                   </div>
-                  <div class="text-h6 mb-1">
+                  <div class="text-h6 mb-1 text-center text-sm-left">
                     {{ price.unit_amount / 100 }}€
                     <span v-if="price.recurring"> / mois</span>
                   </div>
-                  <div class="text-caption">
+                  <div class="text-caption text-center text-sm-left">
                     {{ price.nickname }}
                   </div>
                 </div>

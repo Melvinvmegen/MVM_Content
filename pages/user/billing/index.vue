@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-col cols="12" md="8" lg="6">
+    <v-col cols="12" sm="10" md="8" lg="6">
       <template v-if="store.userSubscription && !showPayment">
         <v-card v-if="store.userSubscription.status === 'VALIDATED'">
           <v-card-title class="text-center">{{

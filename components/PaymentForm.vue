@@ -22,11 +22,11 @@ onMounted(async () => {
     }}</v-card-title>
     <v-card-text>
       <v-row v-if="prices.length">
-        <v-col cols="4" v-for="(price, index) in prices">
+        <v-col sm="4" cols="12" v-for="(price, index) in prices">
           <v-card
             class="mx-auto card-hover"
             :class="{
-              'border-secondary': price.nickname === selectedPrice?.nickname,
+              'border-secondary': price.id === selectedPrice?.id,
             }"
             max-width="344"
             variant="outlined"
@@ -35,11 +35,11 @@ onMounted(async () => {
           >
             <v-card-item>
               <div>
-                <div class="text-overline mb-1">
+                <div class="text-overline mb-1 text-center text-sm-left">
                   {{ priceNames[index] }}
                 </div>
-                <div class="text-h6 mb-1">{{ price.unit_amount / 100 }}€</div>
-                <div class="text-caption">
+                <div class="text-h6 mb-1 text-center text-sm-left">{{ price.unit_amount / 100 }}€</div>
+                <div class="text-caption text-center text-sm-left">
                   {{ price.nickname }}
                 </div>
               </div>
@@ -60,7 +60,7 @@ onMounted(async () => {
         </v-col>
       </v-row>
     </v-card-text>
-    <v-card-actions class="mt-6">
+    <v-card-actions class="my-3">
       <v-btn
         @click="step = 2"
         color="secondary"

@@ -28,9 +28,9 @@ async function updateUserProfil() {
     }}</v-card-title>
     <v-card-text>
       <v-row justify="center">
-        <v-col cols="12" md="10">
+        <v-col cols="12" sm="10" md="8">
           <v-row justify="center">
-            <v-col cols="8">
+            <v-col cols="11" md="8">
               <v-text-field
                 :rules="[(v) => !!v || 'Address is required']"
                 v-model="mutableUserProfile.billingAddress"

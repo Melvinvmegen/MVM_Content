@@ -1,7 +1,7 @@
 <template>
   <v-row justify="center" v-if="paymentIntent">
-    <v-col cols="12" md="8" lg="6">
-      <v-sheet elevation="5" class="pa-8 text-center" v-if="paymentIntent.status === 'DRAFT'">
+    <v-col cols="12" sm="10" md="8" lg="6">
+      <v-sheet elevation="5" class="pa-4 pa-sm-8 text-center" v-if="paymentIntent.status === 'DRAFT'">
         <Icon name="mdi:clock" size="30" />
         <h2 class="text-h5">
           Your payment is currently being processed
@@ -23,7 +23,7 @@
           >.
         </p>
       </v-sheet>
-      <v-sheet elevation="5" class="pa-8 text-center" v-if="paymentIntent.status === 'CAPTURED'">
+      <v-sheet elevation="5" class="pa-4 pa-sm-8 text-center" v-if="paymentIntent.status === 'CAPTURED'">
         <Icon name="⚡" size="30" />
         <template v-if="paymentIntent.type === 'payment'">
         <h2 class="text-h5">

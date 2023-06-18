@@ -1,7 +1,7 @@
 <template>
   <v-row justify="center">
     <v-col cols="12" md="10">
-      <!-- <v-sheet elevation="5" class="pa-8 text-center">
+      <!-- <v-sheet elevation="5" class="pa-4 pa-sm-8 text-center">
         <Icon name="⚡" size="30" />
         <h1 class="text-h5">Content generator</h1>
         <p>Generate content for SEO not bullshit just facts</p>
@@ -61,7 +61,7 @@
           />
         </v-form>
       </v-sheet>
-      <v-sheet elevation="5" class="pa-8 text-center">
+      <v-sheet elevation="5" class="pa-4 pa-sm-8 text-center">
         <v-row justify="center">
           <h2 class="text-h5">Response :</h2>
           <v-spacer />
@@ -217,7 +217,6 @@ if (user.value) {
 watch(currentCompletionIndex, () => {
   completion.value = content.value?.Completions[currentCompletionIndex.value];
   if (!(/<\/?[a-z][\s\S]*>/i.test(completion.value.text))) {
-    console.log("jsuis la watch")
     completion.value.text = completion.value.text.replace(
       /(\n+)([^\n]+)/g,
       "<p>$2</p>"

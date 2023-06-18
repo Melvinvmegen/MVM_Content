@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
       }
     );
 
-    if (!stripePaymentIntent?.length)
+    if (!stripePaymentIntent)
       throw createError({ statusCode: 404, message: "Not found" });
 
     return stripePaymentIntent;

@@ -2,8 +2,8 @@
   <div>
     <v-app>
       <v-app-bar class="px-8">
-        <v-row>
-          <v-col cols="3">
+        <v-row justify="center" align="center">
+          <v-col md="3" cols="6">
             <v-toolbar-title>
               <nuxt-link
                 to="/"
@@ -11,14 +11,19 @@
                 :class="[themeIsLight ? 'text-black' : 'text-white']"
               >
                 <Icon name="⚡" size="24" class="mr-2" />
-                Content generator
+                Content
               </nuxt-link>
             </v-toolbar-title>
           </v-col>
           <v-spacer />
-          <v-col cols="2">
-            <v-row justify="end" align="center" class="flex-0-0">
-              <div v-if="user">
+          <v-col xl="2" md="3" sm="4" cols="6">
+            <v-row
+              justify="end"
+              align="center"
+              class="flex-0-0"
+              :class="{ 'mt-1 ma-sm-n3': !user }"
+            >
+              <v-row v-if="user" justify="center">
                 <v-col cols="2" md="3">
                   <v-menu transition="slide-y-transition">
                     <template v-slot:activator="{ props }">
@@ -57,9 +62,14 @@
                     </v-list>
                   </v-menu>
                 </v-col>
-              </div>
+                <v-col cols="2" md="3">
+                  <v-btn @click="toggleNavigation">
+                    <Icon name="mdi-menu" size="24" />
+                  </v-btn>
+                </v-col>
+              </v-row>
               <v-row v-else>
-                <v-col>
+                <v-col cols="6">
                   <nuxtLink
                     to="sign-in"
                     class="text-decoration-none"
@@ -67,7 +77,7 @@
                     >Sign In</nuxtLink
                   >
                 </v-col>
-                <v-col>
+                <v-col cols="6">
                   <nuxtLink
                     to="sign-up"
                     class="text-decoration-none"
@@ -77,17 +87,19 @@
                 </v-col>
               </v-row>
 
-              <v-btn icon @click="toggleTheme" v-if="themeIsLight">
-                <Icon name="mdi:moon-waxing-crescent" size="24" />
-              </v-btn>
-              <v-btn icon @click="toggleTheme" v-else>
-                <Icon name="mdi:white-balance-sunny" size="24" />
-              </v-btn>
+              <template v-if="smAndUp">
+                <v-btn icon @click="toggleTheme" v-if="themeIsLight">
+                  <Icon name="mdi:moon-waxing-crescent" size="24" />
+                </v-btn>
+                <v-btn icon @click="toggleTheme" v-else>
+                  <Icon name="mdi:white-balance-sunny" size="24" />
+                </v-btn>
+              </template>
             </v-row>
           </v-col>
         </v-row>
       </v-app-bar>
-      <v-navigation-drawer v-if="user">
+      <v-navigation-drawer :model-value="showNavigation" v-if="user">
         <v-list>
           <div>
             <v-list-item
@@ -100,9 +112,9 @@
                 name="mdi:pen"
                 size="24"
                 @click.prevent="
-                  show_modal = true;
-                  new_content.id = content.id;
-                  new_content.name = content.name;
+                  showModal = true;
+                  newContent.id = content.id;
+                  newContent.name = content.name;
                 "
               />
               <Icon
@@ -114,7 +126,7 @@
             <v-divider />
           </div>
           <v-spacer />
-          <v-list-item @click="show_modal = true" class="px-0">
+          <v-list-item @click="showModal = true" class="px-0">
             <span class="px-2">
               <Icon name="mdi:plus" />
               <span class="ml-2">Add new content</span>
@@ -158,11 +170,11 @@
         {{ value.message }}
       </v-snackbar>
     </v-app>
-    <v-dialog v-model="show_modal" width="600">
+    <v-dialog v-model="showModal" width="600">
       <v-card>
         <v-form @submit.prevent="createEditContent">
           <v-card-title class="text-center">{{
-            new_content.id ? "Edit a content" : "Create a new content"
+            newContent.id ? "Edit a content" : "Create a new content"
           }}</v-card-title>
           <v-card-text class="mt-4">
             <v-row dense="dense" justify="center">
@@ -173,7 +185,7 @@
                   label="Content name"
                   density="compact"
                   type="text"
-                  v-model="new_content.name"
+                  v-model="newContent.name"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -182,7 +194,7 @@
             <v-row dense="dense" justify="center">
               <v-col class="d-flex justify-center" cols="12" lg="8">
                 <v-btn class="bg-secondary" type="submit">{{
-                  new_content.id ? "Edit a content" : "Add a content"
+                  newContent.id ? "Edit a content" : "Add a content"
                 }}</v-btn>
               </v-col>
             </v-row>
@@ -197,13 +209,16 @@
 import { useTheme } from "vuetify";
 import loading from "~/stores/loading";
 import { messages, successMessage, errorMessage } from "~/stores/message";
+import { useDisplay } from "vuetify";
 
+const { smAndUp } = useDisplay();
 const user = useSupabaseUser();
-let new_content = reactive({
+let newContent = reactive({
   id: null,
   name: "",
 });
-const show_modal = ref(false);
+const showModal = ref(false);
+const showNavigation = ref(false);
 const contents = ref([]);
 if (user.value) {
   const { data } = await useFetch("/api/contents", {
@@ -245,14 +260,18 @@ function toggleTheme() {
   theme.global.name.value = themeIsLight.value ? "dark" : "light";
 }
 
+function toggleNavigation() {
+  showNavigation.value = !showNavigation.value;
+}
+
 const router = useRouter();
 const createEditContent = async () => {
   try {
     loading.value = true;
-    if (new_content.id) {
-      const { data } = await useFetch(`/api/contents/${new_content.id}`, {
+    if (newContent.id) {
+      const { data } = await useFetch(`/api/contents/${newContent.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ ...new_content }),
+        body: JSON.stringify({ ...newContent }),
         headers: useRequestHeaders(["cookie"]),
       });
       contents.value.find((c) => c.id === data.value.id).name = data.value.name;
@@ -260,7 +279,7 @@ const createEditContent = async () => {
     } else {
       const { data } = await useFetch(`/api/contents`, {
         method: "POST",
-        body: JSON.stringify({ name: new_content.name }),
+        body: JSON.stringify({ name: newContent.name }),
         headers: useRequestHeaders(["cookie"]),
       });
       contents.value.push(data.value);
@@ -268,9 +287,9 @@ const createEditContent = async () => {
       successMessage("Content created successfully");
     }
 
-    show_modal.value = false;
-    new_content.id = null;
-    new_content.name = "";
+    showModal.value = false;
+    newContent.id = null;
+    newContent.name = "";
   } catch (error) {
     console.error("error", error);
     errorMessage(error.message);
@@ -301,6 +320,11 @@ const deleteContent = async (id) => {
 };
 </script>
 <style>
+.v-card-title {
+  word-wrap: normal !important;
+  white-space: normal;
+}
+
 .position-absolute {
   position: absolute;
 }
