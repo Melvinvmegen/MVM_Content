@@ -11,6 +11,7 @@ export default defineNuxtConfig({
     webhookUser: "",
     webhookPassword: "",
     public: {
+      stripePublicKey: "",
       recaptchaSiteKey: "",
     },
   },
@@ -28,11 +29,70 @@ export default defineNuxtConfig({
     "nuxt-icon",
     "@nuxtjs/supabase",
     "@pinia/nuxt",
+    "nuxt-security",
   ],
+  security: {
+    headers: {
+      crossOriginResourcePolicy: false,
+      crossOriginOpenerPolicy: "same-origin",
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: {
+        "base-uri": ["'self'"],
+        "font-src": ["'self'", "https:", "data:"],
+        "form-action": ["'self'"],
+        "frame-ancestors": ["'self'"],
+        "img-src": ["'self'", "data:"],
+        "object-src": ["'none'"],
+        "script-src-attr": ["'none'"],
+        "style-src": ["'self'", "https:", "'unsafe-inline'"],
+        "upgrade-insecure-requests": true,
+      },
+      originAgentCluster: "?1",
+      referrerPolicy: "no-referrer",
+      strictTransportSecurity: {
+        maxAge: 15552000,
+        includeSubdomains: true,
+      },
+      xContentTypeOptions: "nosniff",
+      xDNSPrefetchControl: "off",
+      xDownloadOptions: "noopen",
+      xFrameOptions: "SAMEORIGIN",
+      xPermittedCrossDomainPolicies: "none",
+      xXSSProtection: "0",
+      permissionsPolicy: {
+        camera: ["()"],
+        "display-capture": ["()"],
+        fullscreen: ["()"],
+        geolocation: ["()"],
+        microphone: ["()"],
+      },
+    },
+    requestSizeLimiter: {
+      maxRequestSizeInBytes: 2000000,
+      maxUploadFileRequestInBytes: 8000000,
+    },
+    rateLimiter: {
+      // Twitter search rate limiting
+      tokensPerInterval: 30,
+      interval: "hour",
+      fireImmediately: true,
+    },
+    xssValidator: {},
+    corsHandler: {
+      origin: "*",
+      methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+      preflight: {
+        statusCode: 204,
+      },
+    },
+    allowedMethodsRestricter: "*",
+    hidePoweredBy: true,
+    basicAuth: false,
+    enabled: true,
+    csrf: false,
+  },
   pinia: {
-    autoImports: [
-      'defineStore',
-    ],
+    autoImports: ["defineStore"],
   },
   purgecss: {
     content: ["modules/purgecss/static-generated-html/**/*.html"],
