@@ -33,7 +33,6 @@ function nextStep() {
                 'border-secondary': price.nickname === selectedPrice?.nickname,
               }"
               max-width="344"
-              variant="outlined"
               :hover="true"
               @click="selectedPrice = price"
             >
@@ -53,12 +52,10 @@ function nextStep() {
               </v-card-item>
               <v-card-actions v-if="prices.length > 1">
                 <v-btn
-                  color="secondary"
                   class="mx-auto"
                   :class="{
                     'opacity-1': price.nickname === selectedPrice?.nickname,
                   }"
-                  size="large"
                   variant="plain"
                   >{{ "Select" }}</v-btn
                 >
@@ -70,10 +67,7 @@ function nextStep() {
       <v-card-actions class="mt-6">
         <v-btn
           @click="nextStep"
-          color="secondary"
           class="mx-auto"
-          size="large"
-          variant="outlined"
           >{{ "Next" }}</v-btn
         >
       </v-card-actions>

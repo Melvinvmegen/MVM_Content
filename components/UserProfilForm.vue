@@ -36,7 +36,6 @@ async function updateUserProfil() {
                 v-model="mutableUserProfile.billingAddress"
                 label="Address"
                 required
-                variant="outlined"
                 name="Address"
               ></v-text-field>
               <v-text-field
@@ -44,7 +43,6 @@ async function updateUserProfil() {
                 v-model="mutableUserProfile.billingZipCode"
                 label="ZipCode"
                 required
-                variant="outlined"
                 name="ZipCode"
               ></v-text-field>
               <v-text-field
@@ -52,7 +50,6 @@ async function updateUserProfil() {
                 v-model="mutableUserProfile.billingCity"
                 label="City"
                 required
-                variant="outlined"
                 name="City"
               ></v-text-field>
               <v-text-field
@@ -60,7 +57,6 @@ async function updateUserProfil() {
                 v-model="mutableUserProfile.billingCountry"
                 label="Country"
                 required
-                variant="outlined"
                 name="Country"
               ></v-text-field>
             </v-col>
@@ -71,10 +67,7 @@ async function updateUserProfil() {
     <v-card-actions class="mt-6">
       <v-btn
         type="submit"
-        color="secondary"
         class="mx-auto"
-        size="large"
-        variant="outlined"
         >{{ "Next" }}</v-btn
       >
     </v-card-actions>

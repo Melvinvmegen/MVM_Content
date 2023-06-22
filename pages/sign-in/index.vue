@@ -14,7 +14,6 @@
                 v-model="email"
                 label="Email"
                 required
-                variant="outlined"
                 name="email"
               ></v-text-field>
               <p class="text-right">
@@ -25,10 +24,7 @@
               <password-field v-model:password="password"></password-field>
               <v-btn
                 type="submit"
-                color="secondary"
                 class="mt-2"
-                size="large"
-                variant="outlined"
                 >Submit</v-btn
               >
             </v-col>

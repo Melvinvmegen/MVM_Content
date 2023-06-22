@@ -12,32 +12,26 @@
             label="Job"
             class="mx-4"
             required
-            variant="outlined"
           ></v-text-field>
           <v-text-field
             v-model="doing"
             label="Doing"
             class="mx-4"
             required
-            variant="outlined"
           ></v-text-field>
           <v-textarea
             v-model="completion.prompt"
             label="Instructions"
             class="mx-4"
             required
-            variant="outlined"
             counter
             auto-grow
             :disabled="loading"
           ></v-textarea>
           <v-btn
             type="submit"
-            color="secondary"
             :disabled="!valid"
             class="mt-2"
-            size="large"
-            variant="outlined"
             >{{
               completion.id ? "Régénérer une réponse" : "Générer une réponse"
             }}</v-btn
@@ -155,38 +149,26 @@
           <v-btn
             v-if="completion.id"
             @click="editCompletion"
-            color="secondary"
             :disabled="!valid"
             class="mt-2 ml-4"
-            size="large"
-            variant="outlined"
             >{{ "Editer une réponse" }}</v-btn
           >
           <v-btn
             @click="makeThisMoreHuman"
-            color="secondary"
             class="mt-2 mr-2"
-            size="large"
-            variant="outlined"
             :disabled="!completion.text"
             >Make this more human</v-btn
           >
           <v-btn
             @click="convertToMdFormat"
-            color="secondary"
             :disabled="!completion.text"
             class="mt-2"
-            size="large"
-            variant="outlined"
             >Convert to MD</v-btn
           >
           <v-btn
             @click="translateToFrench"
-            color="secondary"
             :disabled="!completion.text"
             class="mt-2"
-            size="large"
-            variant="outlined"
             >Translate to French</v-btn
           >
         </template>

@@ -14,7 +14,6 @@
                 v-model="newUser.firstName"
                 label="First name"
                 required
-                variant="outlined"
                 name="firstName"
               ></v-text-field>
               <v-text-field
@@ -22,7 +21,6 @@
                 v-model="newUser.lastName"
                 label="Last name"
                 required
-                variant="outlined"
                 name="lastName"
               ></v-text-field>
               <v-text-field
@@ -30,16 +28,12 @@
                 v-model="newUser.email"
                 label="Email"
                 required
-                variant="outlined"
                 name="email"
               ></v-text-field>
               <password-field v-model:password="newUser.password"></password-field>
               <v-btn
                 type="submit"
-                color="secondary"
                 class="mt-2"
-                size="large"
-                variant="outlined"
                 :disabled="!valid"
                 >Submit</v-btn
               >

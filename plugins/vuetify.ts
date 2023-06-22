@@ -3,6 +3,35 @@ import 'vuetify/styles'; // pre-build css styles
 
 export default defineNuxtPlugin((nuxtApp) => {
   const vuetify = createVuetify({
+    defaults: {
+      VTextField: {
+        density: "compact",
+        variant: "outlined",
+      },
+      VFileInput: {
+        density: "compact",
+        variant: "outlined",
+      },
+      VBtn: {
+        color: "secondary",
+        variant: "outlined",
+        rounded: "large",
+      },
+      VCardActions: {
+        VBtn: {
+          color: "secondary",
+          variant: "outlined",
+          rounded: "large",
+        },
+      },
+      VCard: {
+        rounded: "lg",
+      },
+      VList: {
+        density: "compact",
+        lines: "one",
+      },
+    },
     theme: {
       defaultTheme: "dark",
       themes: {

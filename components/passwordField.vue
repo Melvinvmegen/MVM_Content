@@ -8,7 +8,6 @@
     hint="At least 8 characters"
     label="Password"
     required
-    variant="outlined"
     :type="showPassword ? 'text' : 'password'"
     counter
     @input="$emit('update:password', $event.target.value)"

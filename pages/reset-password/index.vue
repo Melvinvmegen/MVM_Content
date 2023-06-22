@@ -16,15 +16,11 @@
                 v-model="email"
                 label="Email"
                 required
-                variant="outlined"
                 name="email"
               ></v-text-field>
               <v-btn
                 type="submit"
-                color="secondary"
                 class="mt-2"
-                size="large"
-                variant="outlined"
                 >Send reset email</v-btn
               >
             </v-col>

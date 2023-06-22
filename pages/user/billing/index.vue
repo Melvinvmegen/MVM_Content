@@ -138,18 +138,14 @@
         <v-btn
           v-if="paymentChoice === 'payment'"
           @click="paymentChoice = 'subscription'"
-          color="secondary"
           class="mx-auto w-100"
-          size="large"
           variant="plain"
           >{{ "Payment par virement" }}</v-btn
         >
         <v-btn
           v-else
           @click="paymentChoice = 'payment'"
-          color="secondary"
           class="mx-auto w-100"
-          size="large"
           variant="plain"
           >{{ "Payment par carte" }}</v-btn
         >

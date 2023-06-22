@@ -12,10 +12,7 @@
               <password-field v-model:password="password"></password-field>
               <v-btn
                 type="submit"
-                color="secondary"
                 class="mt-2"
-                size="large"
-                variant="outlined"
                 >Change my password</v-btn
               >
             </v-col>

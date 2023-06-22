@@ -29,7 +29,6 @@ onMounted(async () => {
               'border-secondary': price.id === selectedPrice?.id,
             }"
             max-width="344"
-            variant="outlined"
             :hover="true"
             @click="selectedPrice = price"
           >
@@ -46,12 +45,10 @@ onMounted(async () => {
             </v-card-item>
             <v-card-actions>
               <v-btn
-                color="secondary"
                 class="mx-auto"
                 :class="{
                   'opacity-1': price.nickname === selectedPrice?.nickname,
                 }"
-                size="large"
                 variant="plain"
                 >{{ "Select" }}</v-btn
               >
@@ -63,10 +60,7 @@ onMounted(async () => {
     <v-card-actions class="my-3">
       <v-btn
         @click="step = 2"
-        color="secondary"
         class="mx-auto"
-        size="large"
-        variant="outlined"
         >{{ "Next" }}</v-btn
       >
     </v-card-actions>

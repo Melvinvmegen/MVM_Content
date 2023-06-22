@@ -27,7 +27,7 @@
                 <v-col cols="2" md="3">
                   <v-menu transition="slide-y-transition">
                     <template v-slot:activator="{ props }">
-                      <v-btn v-bind="props">
+                      <v-btn color="transparent" variant="flat" v-bind="props">
                         <Icon name="mdi-account" size="24" />
                       </v-btn>
                     </template>
@@ -63,7 +63,11 @@
                   </v-menu>
                 </v-col>
                 <v-col cols="2" md="3">
-                  <v-btn @click="toggleNavigation">
+                  <v-btn
+                    color="transparent"
+                    variant="flat"
+                    @click="toggleNavigation"
+                  >
                     <Icon name="mdi-menu" size="24" />
                   </v-btn>
                 </v-col>
@@ -88,10 +92,22 @@
               </v-row>
 
               <template v-if="smAndUp">
-                <v-btn icon @click="toggleTheme" v-if="themeIsLight">
+                <v-btn
+                  color="transparent"
+                  variant="flat"
+                  icon
+                  @click="toggleTheme"
+                  v-if="themeIsLight"
+                >
                   <Icon name="mdi:moon-waxing-crescent" size="24" />
                 </v-btn>
-                <v-btn icon @click="toggleTheme" v-else>
+                <v-btn
+                  color="transparent"
+                  variant="flat"
+                  icon
+                  @click="toggleTheme"
+                  v-else
+                >
                   <Icon name="mdi:white-balance-sunny" size="24" />
                 </v-btn>
               </template>
