@@ -1,17 +1,12 @@
-import { Configuration, OpenAIApi } from "openai";
 import { sendStream } from "h3";
+import openai from "@/utils/openai";
 import prisma from "@/utils/prisma";
 import { serverSupabaseUser } from "#supabase/server";
 
-const runtimeConfig = useRuntimeConfig();
-const configuration = new Configuration({
-  apiKey: runtimeConfig.openaiApiKey,
-});
-const openai = new OpenAIApi(configuration);
-
 export default defineEventHandler(async (event) => {
+  const runtimeConfig = useRuntimeConfig();
   const user = await serverSupabaseUser(event);
-  const { prompt, recaptchaToken, contentName, job, doing } = await readBody(event);
+  const { prompt, recaptchaToken, contentName } = await readBody(event);
   if (!recaptchaToken && !user) {
     return sendError(event, new Error("Missing recaptchaToken"));
   }
@@ -36,7 +31,7 @@ export default defineEventHandler(async (event) => {
         temperature: 0.2,
         stream: true,
         messages: [
-          {role: "system", content: `Ignore all instructions before this one. You're a ${job}. You've been ${doing} for 20 years. Your task is now to`},
+          {role: "system", content: `Ignore all instructions before this one. Your task is now to answer the following question`},
           {
             role: "user",
             content: prompt,
@@ -58,9 +53,9 @@ export default defineEventHandler(async (event) => {
     }
 
     return sendStream(event, res.data);
-  } catch (error) {
+  } catch (error: any) {
     if (error.response?.status) {
-      error.response.data.on("data", (data) => {
+      error.response.data.on("data", (data: any) => {
         const message = data.toString();
         const parsed = JSON.parse(message);
         return sendError(event, new Error(parsed?.error));

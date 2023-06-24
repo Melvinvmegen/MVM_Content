@@ -8,6 +8,10 @@ export default defineNuxtPlugin((nuxtApp) => {
         density: "compact",
         variant: "outlined",
       },
+      VTextarea: {
+        density: "compact",
+        variant: "outlined",
+      },
       VFileInput: {
         density: "compact",
         variant: "outlined",
