@@ -48,6 +48,7 @@ const client = useSupabaseClient();
 const email = ref("");
 const password = ref("");
 const router = useRouter();
+const valid = ref(true);
 
 const login = async () => {
   loading.value = true;

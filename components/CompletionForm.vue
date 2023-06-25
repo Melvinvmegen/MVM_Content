@@ -1,15 +1,25 @@
 <script setup>
 import Editor from "@tinymce/tinymce-vue";
 import { errorMessage } from "~/stores/message";
+import loading from "~/stores/loading";
 
-const props = defineProps(["completion"]);
+const emit = defineEmits(["startCompletion"])
+const props = defineProps(["completion", "completionsCount"]);
 const valid = ref(false);
 const currentSelection = ref(null);
+const showUserNeeded = ref(false);
 const finalPrompt = computed(() => {
   return `${props.completion?.prompt} ${props.completion?.text}`;
 });
 
+function toggleUserNeed() {
+  if (props.completionsCount >= 3) {
+    return showUserNeeded.value = true;
+  }
+}
+
 async function editCompletion() {
+  if (toggleUserNeed()) return;
   // TODO : resolve recaptcha token
   try {
     emit("startCompletion", finalPrompt.value);
@@ -19,6 +29,7 @@ async function editCompletion() {
 }
 
 async function convertToMdFormat() {
+  if (toggleUserNeed()) return;
   try {
     const prompt = `Convert this file text to markdown code : ${props.completion.text}`;
     emit("startCompletion", prompt);
@@ -28,6 +39,7 @@ async function convertToMdFormat() {
 }
 
 async function makeThisMoreHuman() {
+  if (toggleUserNeed()) return;
   currentSelection.value = window.getSelection().toString();
   if (!currentSelection.value.length) {
     errorMessage("There is currently no selection, please select some");
@@ -42,6 +54,7 @@ async function makeThisMoreHuman() {
 }
 
 async function translateToFrench() {
+  if (toggleUserNeed()) return;
   try {
     const prompt = `translate this english documentation code to french while keeping the html intact and without translating the urls : ${props.completion.text}`;
     emit("startCompletion", prompt);
@@ -63,10 +76,10 @@ async function translateToFrench() {
       </div>
     </template>
     <br />
-    <template v-if="completion">
+    <template v-if="props.completion.text">
       <editor
         api-key="9uzkgopcfss96g36pohkqsneyzy3fk40krb1bu5s4uw2r64y"
-        v-model="completion.text"
+        v-model="props.completion.text"
         cloud-channel="6"
         :disabled="loading"
         :init="{
@@ -103,7 +116,7 @@ async function translateToFrench() {
       />
       <v-divider class="my-4" />
       <v-btn
-        v-if="completion.id"
+        v-if="props.completion.id"
         @click="editCompletion"
         :disabled="!valid"
         class="mt-2 ml-4"
@@ -112,23 +125,24 @@ async function translateToFrench() {
       <v-btn
         @click="makeThisMoreHuman"
         class="mt-2 mr-2"
-        :disabled="!completion.text && !user"
+        :disabled="!props.completion.text"
         >Make this more human</v-btn
       >
       <v-btn
         @click="convertToMdFormat"
-        :disabled="!completion.text && !user"
+        :disabled="!props.completion.text"
         class="mt-2"
         >Convert to MD</v-btn
       >
       <v-btn
         @click="translateToFrench"
-        :disabled="!completion.text && !user"
+        :disabled="!props.completion.text"
         class="mt-2"
         >Translate to French</v-btn
       >
     </template>
   </v-sheet>
+  <DialogUserNeeded v-model="showUserNeeded" title="This is not part of the free usage.."/>
 </template>
 <style scoped>
 .loader {

@@ -126,4 +126,12 @@ export default defineNuxtConfig({
     size: "24px",
     class: "icon",
   },
+  vite: {
+    vue: {
+      script: {
+        defineModel: true,
+        propsDestructure: true,
+      },
+    },
+  },
 });

@@ -41,17 +41,6 @@ export default defineEventHandler(async (event) => {
       { responseType: "stream" }
     );
 
-    if (user) {
-      if (!contentName) {
-        await prisma.contents.create({
-          data: {
-            name: decodeURI(contentName),
-            user_id: user.id,
-          },
-        });
-      }
-    }
-
     return sendStream(event, res.data);
   } catch (error: any) {
     if (error.response?.status) {

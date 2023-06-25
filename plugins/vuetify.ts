@@ -20,12 +20,14 @@ export default defineNuxtPlugin((nuxtApp) => {
         color: "secondary",
         variant: "outlined",
         rounded: "large",
+        size: "large"
       },
       VCardActions: {
         VBtn: {
           color: "secondary",
           variant: "outlined",
           rounded: "large",
+          size: "large"
         },
       },
       VCard: {

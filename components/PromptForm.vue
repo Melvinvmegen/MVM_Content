@@ -9,6 +9,10 @@ const prompt = ref("");
 const valid = ref(false);
 const recaptcha = ref(null);
 
+onMounted(() => {
+  prompt.value = props.completion.prompt;
+})
+
 async function submit() {
   recaptcha.value.execute();
 };

@@ -4,7 +4,8 @@
       <PromptForm
         :completion="completion"
         @start-completion="
-          (finalPrompt, recaptchaToken) => streamCompletion(finalPrompt, recaptchaToken, mode)
+          (finalPrompt, recaptchaToken) =>
+            streamCompletion(finalPrompt, recaptchaToken, mode)
         "
       />
       <v-sheet
@@ -88,7 +89,7 @@
         </v-row>
       </v-sheet>
       <v-spacer />
-      <CompletionForm :completion="completion"></CompletionForm>
+      <CompletionForm :completion="completion" :completions-count="completionsCount"></CompletionForm>
     </v-col>
     <v-btn
       color="transparent"
@@ -99,27 +100,28 @@
       ><Icon name="mdi-arrow-up-bold-circle-outline" size="36"
     /></v-btn>
   </v-row>
+  <DialogUserNeeded v-model="showUserNeeded" />
 </template>
 <script setup>
 import { successMessage, errorMessage } from "~/stores/message";
 import loading from "~/stores/loading";
+import completion from "~/stores/completions";
+import { useUserStore } from "~/stores/user";
+import { useContentStore } from "~/stores/contents";
 
 const user = useSupabaseUser();
 const route = useRoute();
-let scrollToTopButton;
-let controlBar;
+const contentStore = useContentStore();
 const storedRecaptchaToken = ref(null);
 const content = ref(null);
-const completion = ref({
-  prompt: "",
-  text: "",
-});
-const contentName = route.params.name;
 const currentCompletionIndex = ref(-1);
 const completionsLength = computed(() => {
   return content.value?.Completions?.length;
 });
+const completionsCount = ref(0);
+const showUserNeeded = ref(false);
 
+const contentName = route.params.name;
 onMounted(async () => {
   if (user.value && contentName) {
     const { data } = await useFetch(`/api/content/${contentName}`, {
@@ -140,6 +142,8 @@ onMounted(async () => {
         );
       }
     }
+  } else {
+    completionsCount.value = Number(localStorage.getItem("completionsCount")) || 0;
   }
 });
 
@@ -190,7 +194,9 @@ async function addCompletion() {
 }
 
 async function streamCompletion(prompt, recaptchaToken, mode = "new") {
-  loading.value = true;
+  if (completionsCount.value >= 3 && !user.value) {
+    return (showUserNeeded.value = true);
+  }
   if (!storedRecaptchaToken.value) {
     storedRecaptchaToken.value = recaptchaToken;
   }
@@ -227,15 +233,25 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
                 completion.value.text = completion.value.text.join(" ");
               }
               if (user.value) {
-                await fetch("/api/contents/completions", {
+                const { data } = await useFetch("/api/contents/completions", {
                   method: "POST",
                   headers: useRequestHeaders(["cookie"]),
                   body: JSON.stringify({
                     text: completion.value.text,
                     prompt: completion.value.prompt,
-                    content_name: content.value.name,
+                    content_name: null,
                   }),
                 });
+
+                await useUserStore().updateUserProfil(data.userProfile);
+
+                content.value = data.content;
+              } else {
+                localStorage.setItem(
+                  "completionsCount",
+                  completionsCount.value + 1
+                );
+                localStorage.setItem("completion", JSON.stringify(completion.value));
               }
               successMessage(
                 "The completion is done, you can now copy it to your clipboard"
@@ -267,9 +283,6 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
             console.error("An error occurred during OpenAI request", error);
             errorMessage(error.message);
             controller.error(error);
-          })
-          .finally(async () => {
-            loading.value = false;
           });
       }
     },
@@ -337,6 +350,8 @@ function copyToClipboard() {
   });
 }
 
+let scrollToTopButton;
+let controlBar;
 function onScroll() {
   if (!scrollToTopButton) {
     scrollToTopButton = document.getElementById("scroll-to-top-button");
