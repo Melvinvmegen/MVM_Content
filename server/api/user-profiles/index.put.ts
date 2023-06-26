@@ -12,10 +12,10 @@ export default defineEventHandler(async (event) => {
         id: userProfile.id,
       },
       data: {
-        billingAddress: userProfile.billingAddress,
-        billingZipCode: userProfile.billingZipCode,
-        billingCity: userProfile.billingCity,
-        billingCountry: userProfile.billingCountry,
+        ...(userProfile.billingAddress && { billingAddress: userProfile.billingAddress }),
+        ...(userProfile.billingZipCode && { billingZipCode: userProfile.billingZipCode }),
+        ...(userProfile.billingCity && { billingCity: userProfile.billingCity }),
+        ...(userProfile.billingCountry && { billingCountry: userProfile.billingCountry }),
       },
     });
   } catch (error) {

@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
         tokens: (userProfile.tokens || 0) + Number(tokens.replace(/\s/g, "")),
       },
     });
-  } else if (subscriptionId) {
+  } else {
     await prisma.userProfiles.update({
       where: {
         FinanceId: customerId,

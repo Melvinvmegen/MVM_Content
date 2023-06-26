@@ -3,7 +3,6 @@ const modelValue = defineModel();
 const { title = "You've completed your free usage" } = defineProps({
   title: {
     type: String,
-    default: "You've completed your free usage",
   },
 });
 </script>

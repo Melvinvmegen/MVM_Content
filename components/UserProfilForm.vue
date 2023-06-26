@@ -3,14 +3,13 @@ import loading from "~/stores/loading";
 import { useUserStore } from "~/stores/user";
 
 const emit = defineEmits("next-step")
-const store = useUserStore();
-const mutableUserProfile = ref(store.userProfile);
+const mutableUserProfile = ref(userStore.userProfile);
 
 async function updateUserProfil() {
   if (!mutableUserProfile.value) return;
   loading.value = true;
   try {
-    store.updateUserProfil(mutableUserProfile.value)
+    useUserStore().updateUserProfil(mutableUserProfile.value)
   } catch (error) {
     console.log("error", error);
     errorMessage(error);

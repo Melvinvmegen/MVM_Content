@@ -2,24 +2,36 @@
 import Editor from "@tinymce/tinymce-vue";
 import { errorMessage } from "~/stores/message";
 import loading from "~/stores/loading";
+import { useUserStore } from "~/stores/user";
 
+const user = useSupabaseUser();
 const emit = defineEmits(["startCompletion"])
 const props = defineProps(["completion", "completionsCount"]);
 const valid = ref(false);
+const userStore = useUserStore();
 const currentSelection = ref(null);
 const showUserNeeded = ref(false);
+const showTokensNeeded = ref(false);
 const finalPrompt = computed(() => {
   return `${props.completion?.prompt} ${props.completion?.text}`;
 });
 
-function toggleUserNeed() {
-  if (props.completionsCount >= 3) {
+function toggleUserNeeded() {
+  if (props.completionsCount >= 3 && !user.value) {
     return showUserNeeded.value = true;
   }
 }
 
+function toggleTokensNeeded() {
+  if (user.value && userStore.userProfile.tokens <= 0 && !userStore.userProfile.SubscriptionId) {
+    return showTokensNeeded.value = true;
+  }
+}
+
 async function editCompletion() {
-  if (toggleUserNeed()) return;
+  if (toggleUserNeeded()) return;
+  if (toggleTokensNeeded()) return;
+
   // TODO : resolve recaptcha token
   try {
     emit("startCompletion", finalPrompt.value);
@@ -29,7 +41,9 @@ async function editCompletion() {
 }
 
 async function convertToMdFormat() {
-  if (toggleUserNeed()) return;
+  if (toggleUserNeeded()) return;
+  if (toggleTokensNeeded()) return;
+
   try {
     const prompt = `Convert this file text to markdown code : ${props.completion.text}`;
     emit("startCompletion", prompt);
@@ -39,7 +53,9 @@ async function convertToMdFormat() {
 }
 
 async function makeThisMoreHuman() {
-  if (toggleUserNeed()) return;
+  if (toggleUserNeeded()) return;
+  if (toggleTokensNeeded()) return;
+
   currentSelection.value = window.getSelection().toString();
   if (!currentSelection.value.length) {
     errorMessage("There is currently no selection, please select some");
@@ -54,7 +70,9 @@ async function makeThisMoreHuman() {
 }
 
 async function translateToFrench() {
-  if (toggleUserNeed()) return;
+  if (toggleUserNeeded()) return;
+  if (toggleTokensNeeded()) return;
+
   try {
     const prompt = `translate this english documentation code to french while keeping the html intact and without translating the urls : ${props.completion.text}`;
     emit("startCompletion", prompt);
@@ -143,6 +161,7 @@ async function translateToFrench() {
     </template>
   </v-sheet>
   <DialogUserNeeded v-model="showUserNeeded" title="This is not part of the free usage.."/>
+  <DialogTokensNeeded v-model="showTokensNeeded"/>
 </template>
 <style scoped>
 .loader {

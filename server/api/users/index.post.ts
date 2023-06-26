@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
       // @ts-ignore
       user = data.user;
       const customer: { id: number } = await $fetch(
-        "${runtimeConfig.basicAuthFinanceUrl}/customers",
+        `${runtimeConfig.basicAuthFinanceUrl}/customers`,
         {
           method: "POST",
           headers: {
@@ -47,6 +47,7 @@ export default defineEventHandler(async (event) => {
           lastName,
           UserId: data.user?.id,
           FinanceId: customer.id,
+          tokens: 100000
         },
       });
     }

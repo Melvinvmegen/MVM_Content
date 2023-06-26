@@ -5,7 +5,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { useUserStore } from "~/stores/user";
 
 const runtimeConfig = useRuntimeConfig();
-const store = useUserStore();
+const userStore = useUserStore();
 const stripe = await loadStripe(runtimeConfig.public.stripePublicKey);
 let elements;
 let form;
@@ -55,13 +55,13 @@ async function handleFormSubmission(event) {
     elements,
     params: {
       billing_details: {
-        name: `${store.userProfile.firstName} ${store.userProfile.lastName}`,
+        name: `${userStore.userProfile.firstName} ${userStore.userProfile.lastName}`,
         address: {
-          city: store.userProfile.billingCity,
-          country: store.userProfile.billingCountry,
-          line1: store.userProfile.billingAddress,
+          city: userStore.userProfile.billingCity,
+          country: userStore.userProfile.billingCountry,
+          line1: userStore.userProfile.billingAddress,
           line2: null,
-          postal_code: store.userProfile.billingZipCode,
+          postal_code: userStore.userProfile.billingZipCode,
           state: null,
         },
       },
@@ -79,12 +79,12 @@ async function handleFormSubmission(event) {
       method: "POST",
       body: JSON.stringify({
         amount: props.amount,
-        customerId: store.userProfile.FinanceId,
+        customerId: userStore.userProfile.FinanceId,
         paymentMethodId: paymentMethod.id,
-        billingAddress: store.userProfile.billingAddress,
-        billingCity: store.userProfile.billingCity,
-        billingZipCode: store.userProfile.billingZipCode,
-        billingCountry: store.userProfile.billingCountry,
+        billingAddress: userStore.userProfile.billingAddress,
+        billingCity: userStore.userProfile.billingCity,
+        billingZipCode: userStore.userProfile.billingZipCode,
+        billingCountry: userStore.userProfile.billingCountry,
         priceId: props.priceId,
       }),
     }

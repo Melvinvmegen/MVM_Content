@@ -1,8 +1,11 @@
 <script setup>
 import { VueRecaptcha } from "vue-recaptcha";
 import loading from "~/stores/loading";
+import { useUserStore } from "~/stores/user";
+
 const runtimeConfig = useRuntimeConfig();
-const props = defineProps(["completion"])
+const user = useSupabaseUser();
+const props = defineProps(["completion", "completionsCount"]);
 const job = ref("javascript developer");
 const doing = ref("coding");
 const prompt = ref("");
@@ -13,7 +16,18 @@ onMounted(() => {
   prompt.value = props.completion.prompt;
 })
 
+const showUserNeeded = ref(false);
+const showTokensNeeded = ref(false);
 async function submit() {
+  if (!user.value) {
+    if (props.completionsCount.value >= 3) {
+      return (showUserNeeded.value = true);
+    }
+  } else {
+    if (useUserStore().userProfile.tokens <= 0 && useUserStore().subscriptionId) {
+      return (showTokensNeeded.value = true);
+    }
+  }
   recaptcha.value.execute();
 };
 
@@ -72,4 +86,6 @@ async function onCaptchaVerified(recaptchaToken) {
       />
     </v-form>
   </v-sheet>
+  <DialogUserNeeded v-model="showUserNeeded" />
+  <DialogTokensNeeded v-model="showTokensNeeded" />
 </template>

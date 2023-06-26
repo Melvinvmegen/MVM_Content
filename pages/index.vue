@@ -3,6 +3,7 @@
     <v-col cols="12" sm="10" md="8" lg="7">
       <PromptForm
         :completion="completion"
+        :completions-count="completionsCount"
         @start-completion="
           (finalPrompt, recaptchaToken) =>
             streamCompletion(finalPrompt, recaptchaToken, mode)
@@ -89,7 +90,10 @@
         </v-row>
       </v-sheet>
       <v-spacer />
-      <CompletionForm :completion="completion" :completions-count="completionsCount"></CompletionForm>
+      <CompletionForm
+        :completion="completion"
+        :completions-count="completionsCount"
+      ></CompletionForm>
     </v-col>
     <v-btn
       color="transparent"
@@ -100,7 +104,6 @@
       ><Icon name="mdi-arrow-up-bold-circle-outline" size="36"
     /></v-btn>
   </v-row>
-  <DialogUserNeeded v-model="showUserNeeded" />
 </template>
 <script setup>
 import { successMessage, errorMessage } from "~/stores/message";
@@ -113,23 +116,15 @@ const user = useSupabaseUser();
 const route = useRoute();
 const contentStore = useContentStore();
 const storedRecaptchaToken = ref(null);
-const content = ref(null);
 const currentCompletionIndex = ref(-1);
 const completionsLength = computed(() => {
-  return content.value?.Completions?.length;
+  return contentStore.getCurrentContent.value?.Completions?.length;
 });
 const completionsCount = ref(0);
-const showUserNeeded = ref(false);
 
 const contentName = route.params.name;
 onMounted(async () => {
   if (user.value && contentName) {
-    const { data } = await useFetch(`/api/content/${contentName}`, {
-      key: `content ${contentName} for ${user.value.id}`,
-      headers: useRequestHeaders(["cookie"]),
-    });
-
-    content.value = data.value;
     currentCompletionIndex.value = completionsLength.value - 1;
 
     if (completionsLength.value > 0) {
@@ -143,7 +138,8 @@ onMounted(async () => {
       }
     }
   } else {
-    completionsCount.value = Number(localStorage.getItem("completionsCount")) || 0;
+    completionsCount.value =
+      Number(localStorage.getItem("completionsCount")) || 0;
   }
 });
 
@@ -194,9 +190,6 @@ async function addCompletion() {
 }
 
 async function streamCompletion(prompt, recaptchaToken, mode = "new") {
-  if (completionsCount.value >= 3 && !user.value) {
-    return (showUserNeeded.value = true);
-  }
   if (!storedRecaptchaToken.value) {
     storedRecaptchaToken.value = recaptchaToken;
   }
@@ -232,6 +225,7 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
               if (mode === "edit") {
                 completion.value.text = completion.value.text.join(" ");
               }
+              localStorage.removeItem("completion");
               if (user.value) {
                 const { data } = await useFetch("/api/contents/completions", {
                   method: "POST",
@@ -244,14 +238,19 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
                 });
 
                 await useUserStore().updateUserProfil(data.userProfile);
-
-                content.value = data.content;
+                if (data.value.content) {
+                  contentStore.addContent(data.value.content);
+                  contentStore.getCurrentContent(data.value.content.id);
+                }
               } else {
                 localStorage.setItem(
                   "completionsCount",
                   completionsCount.value + 1
                 );
-                localStorage.setItem("completion", JSON.stringify(completion.value));
+                localStorage.setItem(
+                  "completion",
+                  JSON.stringify(completion.value)
+                );
               }
               successMessage(
                 "The completion is done, you can now copy it to your clipboard"
@@ -310,7 +309,7 @@ async function createOrUpdateCompletion() {
           text: completion.value.text,
           prompt: completion.value.prompt,
           completion_id: completion.value.id,
-          content_name: content.value.name,
+          content_name: contentStore.getCurrentContent.value.name,
         }),
       });
       successMessage("The completion is successfully created");
@@ -330,9 +329,10 @@ async function deleteCompletion() {
     }),
   });
 
-  content.value.Completions = content.value.Completions.filter(
-    (c) => c.id !== completion.value.id
-  );
+  content.value.Completions =
+    contentStore.getCurrentContent.value.Completions.filter(
+      (c) => c.id !== completion.value.id
+    );
 
   currentCompletionIndex.value -= 1;
 

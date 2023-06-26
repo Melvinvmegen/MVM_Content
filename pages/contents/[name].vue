@@ -4,7 +4,8 @@
       <PromptForm
         :completion="completion"
         @start-completion="
-          (finalPrompt, recaptchaToken) => streamCompletion(finalPrompt, recaptchaToken, mode)
+          (finalPrompt, recaptchaToken) =>
+            streamCompletion(finalPrompt, recaptchaToken, mode)
         "
       />
       <v-sheet

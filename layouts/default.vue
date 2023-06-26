@@ -16,18 +16,19 @@
             </v-toolbar-title>
           </v-col>
           <v-spacer />
-          <v-col xl="2" md="3" sm="4" cols="6">
+          <v-col xl="2" sm="5" cols="6">
             <v-row
               justify="end"
               align="center"
               class="flex-0-0"
               :class="{ 'mt-1 ma-sm-n3': !user }"
             >
-              <v-row v-if="user" justify="center">
-                <v-col cols="2" md="3">
+              <v-row v-if="user" justify="end">
+                <v-col cols="2" md="5">
                   <v-menu transition="slide-y-transition">
                     <template v-slot:activator="{ props }">
                       <v-btn color="transparent" variant="flat" v-bind="props">
+                        <span v-if="userStore.userProfile.tokens !== null" class="mr-4">🪙 {{ userStore.userProfile.tokens }}</span>
                         <Icon name="mdi-account" size="24" />
                       </v-btn>
                     </template>
@@ -75,7 +76,7 @@
               <v-row v-else>
                 <v-col cols="6">
                   <nuxtLink
-                    to="sign-in"
+                    to="/sign-in"
                     class="text-decoration-none"
                     :class="[themeIsLight ? 'text-black' : 'text-white']"
                     >Sign In</nuxtLink
@@ -83,7 +84,7 @@
                 </v-col>
                 <v-col cols="6">
                   <nuxtLink
-                    to="sign-up"
+                    to="/sign-up"
                     class="text-decoration-none"
                     :class="[themeIsLight ? 'text-black' : 'text-white']"
                     >Sign Up</nuxtLink
@@ -120,7 +121,7 @@
           <div>
             <v-list-item
               :to="`/contents/${content?.name}`"
-              v-for="content of contents"
+              v-for="content of contentStore.contents"
               class="px-0"
             >
               <span class="px-2">{{ content?.name }}</span>
@@ -225,24 +226,22 @@
 import { useTheme } from "vuetify";
 import loading from "~/stores/loading";
 import { messages, successMessage, errorMessage } from "~/stores/message";
+import { useUserStore } from "~/stores/user";
+import { useContentStore } from "~/stores/contents";
 import { useDisplay } from "vuetify";
 
 const { smAndUp } = useDisplay();
 const user = useSupabaseUser();
+const userStore = useUserStore();
+const contentStore = useContentStore();
 let newContent = reactive({
   id: null,
   name: "",
 });
 const showModal = ref(false);
 const showNavigation = ref(false);
-const contents = ref([]);
 if (user.value) {
-  const { data } = await useFetch("/api/contents", {
-    key: `contents for ${user.value.id}`,
-    headers: useRequestHeaders(["cookie"]),
-  });
-
-  contents.value = data.value;
+  await contentStore.getContents(user.value.id)
 }
 
 const route = useRoute();
@@ -290,7 +289,7 @@ const createEditContent = async () => {
         body: JSON.stringify({ ...newContent }),
         headers: useRequestHeaders(["cookie"]),
       });
-      contents.value.find((c) => c.id === data.value.id).name = data.value.name;
+      contentStore.updateContent(data.value);
       successMessage("Content edited successfully");
     } else {
       const { data } = await useFetch(`/api/contents`, {
@@ -298,7 +297,7 @@ const createEditContent = async () => {
         body: JSON.stringify({ name: newContent.name }),
         headers: useRequestHeaders(["cookie"]),
       });
-      contents.value.push(data.value);
+      contentStore.addContent(data.value);
       router.push(`/contents/${data.value.name}`);
       successMessage("Content created successfully");
     }
@@ -323,8 +322,7 @@ const deleteContent = async (id) => {
       method: "DELETE",
       headers: useRequestHeaders(["cookie"]),
     });
-    const index = contents.value.findIndex((c) => c.id === id);
-    contents.value.splice(index, 1);
+    contentStore.removeContent(id);
     successMessage("Content deleted successfully");
   } catch (error) {
     console.error("error", error);
