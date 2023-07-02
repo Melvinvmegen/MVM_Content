@@ -1,17 +1,24 @@
 <script setup>
+import { VueRecaptcha } from "vue-recaptcha";
 import Editor from "@tinymce/tinymce-vue";
 import { errorMessage } from "~/stores/message";
-import loading from "~/stores/loading";
 import { useUserStore } from "~/stores/user";
 
+const runtimeConfig = useRuntimeConfig();
+const recaptcha = ref(null);
 const user = useSupabaseUser();
-const emit = defineEmits(["startCompletion"])
-const props = defineProps(["completion", "completionsCount"]);
+const emit = defineEmits(["startCompletion"]);
+const props = defineProps([
+  "completion",
+  "completionsCount",
+  "loadingCompletion",
+]);
 const valid = ref(false);
 const userStore = useUserStore();
 const currentSelection = ref(null);
 const showUserNeeded = ref(false);
 const showTokensNeeded = ref(false);
+const callerFunction = ref(null);
 const finalPrompt = computed(() => {
   return `${props.completion?.prompt} ${props.completion?.text}`;
 });
@@ -23,83 +30,103 @@ function toggleUserNeeded() {
 }
 
 function toggleTokensNeeded() {
-  if (user.value && userStore.userProfile.tokens <= 0 && !userStore.userProfile.SubscriptionId) {
-    return showTokensNeeded.value = true;
+  if (
+    user.value &&
+    userStore.userProfile.tokens <= 0 &&
+    !userStore.userProfile.SubscriptionId
+  ) {
+    return (showTokensNeeded.value = true);
   }
 }
 
-async function editCompletion() {
+async function editCompletion(recaptchaToken) {
+  callerFunction.value = "editCompletion"
   if (toggleUserNeeded()) return;
   if (toggleTokensNeeded()) return;
+  if (!recaptchaToken) return recaptcha.value.execute();
 
-  // TODO : resolve recaptcha token
   try {
-    emit("startCompletion", finalPrompt.value);
+    emit("startCompletion", finalPrompt.value, recaptchaToken);
   } catch (error) {
     errorMessage(error);
   }
 }
 
-async function convertToMdFormat() {
+async function convertToMdFormat(recaptchaToken) {
+  callerFunction.value = "convertToMdFormat"
   if (toggleUserNeeded()) return;
   if (toggleTokensNeeded()) return;
+  if (!recaptchaToken) return recaptcha.value.execute();
 
   try {
     const prompt = `Convert this file text to markdown code : ${props.completion.text}`;
-    emit("startCompletion", prompt);
+    emit("startCompletion", prompt, recaptchaToken);
   } catch (error) {
     errorMessage(error);
   }
 }
 
-async function makeThisMoreHuman() {
+async function makeThisMoreHuman(recaptchaToken) {
+  callerFunction.value = "makeThisMoreHuman"
   if (toggleUserNeeded()) return;
   if (toggleTokensNeeded()) return;
+  if (!recaptchaToken) return recaptcha.value.execute();
 
-  currentSelection.value = window.getSelection().toString();
+  currentSelection.value = document
+    .querySelector(".tox-tinymce")
+    .querySelector("iframe")
+    .contentWindow.getSelection()
+    .toString();
   if (!currentSelection.value.length) {
-    errorMessage("There is currently no selection, please select some");
+    return errorMessage("There is currently no selection, please select some");
   }
   props.completion.text = props.completion.text.split(currentSelection.value);
   try {
-    const finalPrompt = `Make this more human ${currentSelection.value}`;
-    emit("startCompletion", finalPrompt, null, "edit");
+    const finalPrompt = `Make this more human: ${currentSelection.value}`;
+    emit("startCompletion", finalPrompt, recaptchaToken, "edit");
   } catch (error) {
     errorMessage(error);
   }
 }
 
-async function translateToFrench() {
+async function translateToFrench(recaptchaToken) {
+  callerFunction.value = "translateToFrench"
   if (toggleUserNeeded()) return;
   if (toggleTokensNeeded()) return;
+  if (!recaptchaToken) return recaptcha.value.execute();
 
   try {
     const prompt = `translate this english documentation code to french while keeping the html intact and without translating the urls : ${props.completion.text}`;
-    emit("startCompletion", prompt);
+    emit("startCompletion", prompt, recaptchaToken);
   } catch (error) {
     errorMessage(error);
   }
 }
+
+async function onCaptchaExpired() {
+  recaptcha.value.reset();
+};
+async function onCaptchaVerified(recaptchaToken) {
+  recaptcha.value.reset();
+  try {
+    eval(`${callerFunction.value}('${recaptchaToken}')`);
+  } catch (error) {
+    console.error("error", error);
+  }
+};
 </script>
 <template>
   <v-sheet
     elevation="5"
-    class="pa-4 pa-sm-8 text-center position-relative"
+    class="px-4 pb-4 px-sm-8 pb-sm-8 text-center position-relative"
   >
-    <template v-if="loading">
-      <div class="loader">
-        <div class="circle" id="a"></div>
-        <div class="circle" id="b"></div>
-        <div class="circle" id="c"></div>
-      </div>
-    </template>
     <br />
     <template v-if="props.completion.text">
       <editor
         api-key="9uzkgopcfss96g36pohkqsneyzy3fk40krb1bu5s4uw2r64y"
         v-model="props.completion.text"
         cloud-channel="6"
-        :disabled="loading"
+        :disabled="loadingCompletion"
         :init="{
           menubar: false,
           toolbar_sticky: true,
@@ -135,70 +162,45 @@ async function translateToFrench() {
       <v-divider class="my-4" />
       <v-btn
         v-if="props.completion.id"
-        @click="editCompletion"
+        @click="editCompletion(recaptchaToken)"
         :disabled="!valid"
         class="mt-2 ml-4"
         >{{ "Editer une réponse" }}</v-btn
       >
       <v-btn
-        @click="makeThisMoreHuman"
+        @click="makeThisMoreHuman(recaptchaToken)"
         class="mt-2 mr-2"
         :disabled="!props.completion.text"
         >Make this more human</v-btn
       >
       <v-btn
-        @click="convertToMdFormat"
+        @click="convertToMdFormat(recaptchaToken)"
         :disabled="!props.completion.text"
         class="mt-2"
         >Convert to MD</v-btn
       >
       <v-btn
-        @click="translateToFrench"
+        @click="translateToFrench(recaptchaToken)"
         :disabled="!props.completion.text"
         class="mt-2"
         >Translate to French</v-btn
       >
+      <vue-recaptcha
+        size="invisible"
+        @expired="onCaptchaExpired"
+        @verify="onCaptchaVerified"
+        ref="recaptcha"
+        :sitekey="runtimeConfig.public.recaptchaSiteKey"
+      />
     </template>
   </v-sheet>
-  <DialogUserNeeded v-model="showUserNeeded" title="This is not part of the free usage.."/>
-  <DialogTokensNeeded v-model="showTokensNeeded"/>
+  <DialogUserNeeded
+    v-model="showUserNeeded"
+    title="This is not part of the free usage.."
+  />
+  <DialogTokensNeeded v-model="showTokensNeeded" />
 </template>
 <style scoped>
-.loader {
-  width: 180px;
-  height: 80px;
-  margin: auto;
-  display: flex;
-  justify-content: flex-end;
-}
-.circle {
-  width: 5px;
-  height: 5px;
-  background: white;
-  border-radius: 50%;
-  margin: 0 2px;
-  animation: jump 1s linear infinite;
-}
-
-#b {
-  animation-delay: 0.2s;
-}
-#c {
-  animation-delay: 0.4s;
-}
-
-@keyframes jump {
-  0% {
-    margin-top: 0;
-  }
-  35% {
-    margin-top: -5px;
-  }
-  70% {
-    margin-top: 0px;
-  }
-}
-
 .mce-content-body {
   border-color: white;
   border-width: 1px;
@@ -215,5 +217,4 @@ async function translateToFrench() {
 .mce-content-body ol {
   margin-left: 30px;
 }
-
 </style>

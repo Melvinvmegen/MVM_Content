@@ -6,14 +6,14 @@
         :completions-count="completionsCount"
         @start-completion="
           (finalPrompt, recaptchaToken) =>
-            streamCompletion(finalPrompt, recaptchaToken, mode)
+            streamCompletion(finalPrompt, recaptchaToken)
         "
       />
       <v-sheet
         elevation="5"
         class="pa-4 pa-sm-8 text-center position-relative mt-2"
       >
-        <v-row class="w-100" id="control-bar" justify="center">
+        <v-row class="w-100" id="control-bar" justify="center" align="center">
           <template v-if="completion">
             <template v-if="completionsLength > 1">
               <v-btn
@@ -87,12 +87,24 @@
               </v-btn>
             </template>
           </template>
+          <template v-if="loadingCompletion">
+            <div class="loader">
+              <div class="circle" id="a"></div>
+              <div class="circle" id="b"></div>
+              <div class="circle" id="c"></div>
+            </div>
+          </template>
         </v-row>
       </v-sheet>
       <v-spacer />
       <CompletionForm
         :completion="completion"
         :completions-count="completionsCount"
+        :loading-completion="loadingCompletion"
+        @start-completion="
+          (finalPrompt, recaptchaToken, mode) =>
+            streamCompletion(finalPrompt, recaptchaToken, mode)
+        "
       ></CompletionForm>
     </v-col>
     <v-btn
@@ -189,11 +201,13 @@ async function addCompletion() {
   }
 }
 
+const loadingCompletion = ref(false);
 async function streamCompletion(prompt, recaptchaToken, mode = "new") {
   if (!storedRecaptchaToken.value) {
     storedRecaptchaToken.value = recaptchaToken;
   }
 
+  loadingCompletion.value = true;
   const response = await fetch("/api/completions", {
     method: "POST",
     headers: useRequestHeaders(["cookie"]),
@@ -204,7 +218,10 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
     }),
   });
 
-  completion.value.text = "";
+  if (mode !== "edit") {
+    completion.value.text = "";
+  }
+
   const reader = response.body.getReader();
   return new ReadableStream({
     start(controller) {
@@ -232,7 +249,7 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
                   headers: useRequestHeaders(["cookie"]),
                   body: JSON.stringify({
                     text: completion.value.text,
-                    prompt: completion.value.prompt,
+                    prompt,
                     content_name: null,
                   }),
                 });
@@ -249,12 +266,16 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
                 );
                 localStorage.setItem(
                   "completion",
-                  JSON.stringify(completion.value)
+                  JSON.stringify({
+                    text: completion.value.text,
+                    prompt,
+                  })
                 );
               }
               successMessage(
                 "The completion is done, you can now copy it to your clipboard"
               );
+              loadingCompletion.value = false;
               return;
             }
 
@@ -267,7 +288,7 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
                     ?.content
                 );
                 if (content) {
-                  if (mode === "edit") {
+                  if (mode === "edit" && completion.value.text) {
                     completion.value.text[0] += content;
                   } else {
                     completion.value.text += content;
@@ -393,5 +414,37 @@ function scrollTo() {
   position: fixed;
   bottom: 120px;
   right: 20px;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+}
+.circle {
+  width: 5px;
+  height: 5px;
+  background: white;
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: jump 1s linear infinite;
+}
+
+#b {
+  animation-delay: 0.2s;
+}
+#c {
+  animation-delay: 0.4s;
+}
+
+@keyframes jump {
+  0% {
+    margin-top: 0;
+  }
+  35% {
+    margin-top: -5px;
+  }
+  70% {
+    margin-top: 0px;
+  }
 }
 </style>

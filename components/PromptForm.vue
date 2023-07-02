@@ -20,7 +20,7 @@ const showUserNeeded = ref(false);
 const showTokensNeeded = ref(false);
 async function submit() {
   if (!user.value) {
-    if (props.completionsCount.value >= 3) {
+    if (props.completionsCount >= 3) {
       return (showUserNeeded.value = true);
     }
   } else {

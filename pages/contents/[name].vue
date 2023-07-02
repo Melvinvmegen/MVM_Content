@@ -5,14 +5,14 @@
         :completion="completion"
         @start-completion="
           (finalPrompt, recaptchaToken) =>
-            streamCompletion(finalPrompt, recaptchaToken, mode)
+            streamCompletion(finalPrompt, recaptchaToken)
         "
       />
       <v-sheet
         elevation="5"
         class="pa-4 pa-sm-8 text-center position-relative mt-2"
       >
-        <v-row class="w-100" id="control-bar" justify="center">
+        <v-row class="w-100" id="control-bar" justify="center" align="center">
           <template v-if="completion">
             <template v-if="completionsLength > 1">
               <v-btn
@@ -86,10 +86,24 @@
               </v-btn>
             </template>
           </template>
+          <template v-if="loadingCompletion">
+            <div class="loader">
+              <div class="circle" id="a"></div>
+              <div class="circle" id="b"></div>
+              <div class="circle" id="c"></div>
+            </div>
+          </template>
         </v-row>
       </v-sheet>
       <v-spacer />
-      <CompletionForm :completion="completion"></CompletionForm>
+      <CompletionForm
+        :completion="completion"
+        :loading-completion="loadingCompletion"
+        @start-completion="
+          (finalPrompt, recaptchaToken, mode) =>
+            streamCompletion(finalPrompt, recaptchaToken, mode)
+        "
+      ></CompletionForm>
     </v-col>
     <v-btn
       color="transparent"
@@ -104,42 +118,36 @@
 <script setup>
 import { successMessage, errorMessage } from "~/stores/message";
 import loading from "~/stores/loading";
+import completion from "~/stores/completions";
+import { useUserStore } from "~/stores/user";
+import { useContentStore } from "~/stores/contents";
 
 const user = useSupabaseUser();
 const route = useRoute();
-let scrollToTopButton;
-let controlBar;
+const contentStore = useContentStore();
 const storedRecaptchaToken = ref(null);
-const content = ref(null);
-const completion = ref({
-  prompt: "",
-  text: "",
-});
-const contentName = route.params.name;
 const currentCompletionIndex = ref(-1);
 const completionsLength = computed(() => {
-  return content.value?.Completions?.length;
+  return contentStore.getCurrentContent.value?.Completions?.length;
 });
 
+const contentName = route.params.name;
 onMounted(async () => {
-  if (user.value && contentName) {
-    const { data } = await useFetch(`/api/content/${contentName}`, {
-      key: `content ${contentName} for ${user.value.id}`,
-      headers: useRequestHeaders(["cookie"]),
-    });
+  const { data } = await useFetch(`/api/content/${contentName}`, {
+    key: `content ${contentName} for ${user.value.id}`,
+    headers: useRequestHeaders(["cookie"]),
+  });
 
-    content.value = data.value;
-    currentCompletionIndex.value = completionsLength.value - 1;
+  content.value = data.value;
+  currentCompletionIndex.value = completionsLength.value - 1;
 
-    if (completionsLength.value > 0) {
-      completion.value =
-        content.value?.Completions[currentCompletionIndex.value];
-      if (!/<\/?[a-z][\s\S]*>/i.test(completion.value.text)) {
-        completion.value.text = completion.value.text.replace(
-          /(\n+)([^\n]+)/g,
-          "<p>$2</p>"
-        );
-      }
+  if (completionsLength.value > 0) {
+    completion.value = content.value?.Completions[currentCompletionIndex.value];
+    if (!/<\/?[a-z][\s\S]*>/i.test(completion.value.text)) {
+      completion.value.text = completion.value.text.replace(
+        /(\n+)([^\n]+)/g,
+        "<p>$2</p>"
+      );
     }
   }
 });
@@ -190,12 +198,13 @@ async function addCompletion() {
   }
 }
 
+const loadingCompletion = ref(false);
 async function streamCompletion(prompt, recaptchaToken, mode = "new") {
-  loading.value = true;
   if (!storedRecaptchaToken.value) {
     storedRecaptchaToken.value = recaptchaToken;
   }
 
+  loadingCompletion.value = true;
   const response = await fetch("/api/completions", {
     method: "POST",
     headers: useRequestHeaders(["cookie"]),
@@ -206,7 +215,10 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
     }),
   });
 
-  completion.value.text = "";
+  if (mode !== "edit") {
+    completion.value.text = "";
+  }
+
   const reader = response.body.getReader();
   return new ReadableStream({
     start(controller) {
@@ -227,20 +239,25 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
               if (mode === "edit") {
                 completion.value.text = completion.value.text.join(" ");
               }
-              if (user.value) {
-                await fetch("/api/contents/completions", {
-                  method: "POST",
-                  headers: useRequestHeaders(["cookie"]),
-                  body: JSON.stringify({
-                    text: completion.value.text,
-                    prompt: completion.value.prompt,
-                    content_name: content.value.name,
-                  }),
-                });
+              const { data } = await useFetch("/api/contents/completions", {
+                method: "POST",
+                headers: useRequestHeaders(["cookie"]),
+                body: JSON.stringify({
+                  text: completion.value.text,
+                  prompt,
+                  content_name: content.value.name,
+                }),
+              });
+
+              await useUserStore().updateUserProfil(data.userProfile);
+              if (data.value.content) {
+                contentStore.addContent(data.value.content);
+                contentStore.getCurrentContent(data.value.content.id);
               }
               successMessage(
                 "The completion is done, you can now copy it to your clipboard"
               );
+              loadingCompletion.value = false;
               return;
             }
 
@@ -253,7 +270,7 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
                     ?.content
                 );
                 if (content) {
-                  if (mode === "edit") {
+                  if (mode === "edit" && completion.value.text) {
                     completion.value.text[0] += content;
                   } else {
                     completion.value.text += content;
@@ -268,9 +285,6 @@ async function streamCompletion(prompt, recaptchaToken, mode = "new") {
             console.error("An error occurred during OpenAI request", error);
             errorMessage(error.message);
             controller.error(error);
-          })
-          .finally(async () => {
-            loading.value = false;
           });
       }
     },
@@ -298,7 +312,7 @@ async function createOrUpdateCompletion() {
           text: completion.value.text,
           prompt: completion.value.prompt,
           completion_id: completion.value.id,
-          content_name: content.value.name,
+          content_name: contentStore.getCurrentContent.value.name,
         }),
       });
       successMessage("The completion is successfully created");
@@ -318,9 +332,10 @@ async function deleteCompletion() {
     }),
   });
 
-  content.value.Completions = content.value.Completions.filter(
-    (c) => c.id !== completion.value.id
-  );
+  content.value.Completions =
+    contentStore.getCurrentContent.value.Completions.filter(
+      (c) => c.id !== completion.value.id
+    );
 
   currentCompletionIndex.value -= 1;
 
@@ -338,6 +353,8 @@ function copyToClipboard() {
   });
 }
 
+let scrollToTopButton;
+let controlBar;
 function onScroll() {
   if (!scrollToTopButton) {
     scrollToTopButton = document.getElementById("scroll-to-top-button");
@@ -379,5 +396,37 @@ function scrollTo() {
   position: fixed;
   bottom: 120px;
   right: 20px;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+}
+.circle {
+  width: 5px;
+  height: 5px;
+  background: white;
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: jump 1s linear infinite;
+}
+
+#b {
+  animation-delay: 0.2s;
+}
+#c {
+  animation-delay: 0.4s;
+}
+
+@keyframes jump {
+  0% {
+    margin-top: 0;
+  }
+  35% {
+    margin-top: -5px;
+  }
+  70% {
+    margin-top: 0px;
+  }
 }
 </style>
